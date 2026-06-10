@@ -1,5 +1,6 @@
 // src/pages/Home.jsx - Blog home page
 import { useState, useEffect } from 'react';
+import { Link} from 'react-router-dom';
 import { getPosts } from '../api/posts';
 
 function Home() {
@@ -72,30 +73,31 @@ function Home() {
 
         <div className="space-y-4">
           {posts.map((post) => (
-           <article
-              key={post.id}
-              className="group relative overflow-hidden rounded-xl p-6 cursor-pointer bg-white bg-gradient-to-br from-transparent to-brand/40 transition-all duration-200 hover:to-brand/60 hover:shadow-lg hover:shadow-brand/20"
-            >
-              <div className="flex items-center gap-3 font-mono text-xs text-ink/50 mb-3">
-                <span>{post.read_time} min</span>
-                <span className="text-ink/20">/</span>
-                <span>{post.views} views</span>
-                {post.is_featured && (
-                  <span className="ml-auto rounded-full border border-ink/20 px-2 py-0.5 text-ink/70">
-                    featured
-                  </span>
-                )}
-              </div>
-              <h3 className="font-display text-2xl font-semibold leading-snug mb-2 text-ink">
-                {post.title}
-              </h3>
-              <p className="text-ink/70 leading-relaxed mb-4">
-                {post.excerpt}
-              </p>
-              <div className="font-mono text-xs text-ink/50">
-                {post.author.full_name || post.author.username}
-              </div>
-            </article>
+            <Link to={`/post/${post.slug}`} key={post.id} className="block">
+              <article
+                className="group relative overflow-hidden rounded-xl p-6 cursor-pointer bg-white bg-gradient-to-br from-transparent to-brand/40 transition-all duration-200 hover:to-brand/60 hover:shadow-lg hover:shadow-brand/20"
+              >
+                <div className="flex items-center gap-3 font-mono text-xs text-ink/50 mb-3">
+                  <span>{post.read_time} min</span>
+                  <span className="text-ink/20">/</span>
+                  <span>{post.views} views</span>
+                  {post.is_featured && (
+                    <span className="ml-auto rounded-full border border-ink/20 px-2 py-0.5 text-ink/70">
+                      featured
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display text-2xl font-semibold leading-snug mb-2 text-ink">
+                  {post.title}
+                </h3>
+                <p className="text-ink/70 leading-relaxed mb-4">
+                  {post.excerpt}
+                </p>
+                <div className="font-mono text-xs text-ink/50">
+                  {post.author.full_name || post.author.username}
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </main>
