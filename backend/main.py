@@ -39,6 +39,7 @@ app.add_middleware(
 )
 
 # Include routes
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(posts.router, prefix="/api/posts", tags=["Posts"])
 
 # Health check
@@ -49,3 +50,11 @@ async def root():
         "message": "SpinozaSoftBits Blog API",
         "docs": "/docs"
     }
+
+# added a POST Endpoint check. 
+@app.route("/api/health", methods=["POST"])
+async def health_check():
+    return {
+        "status ": "OK"
+    }
+
