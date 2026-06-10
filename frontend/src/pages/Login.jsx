@@ -26,10 +26,15 @@ function Login() {
 
   return (
     <div className="max-w-sm mx-auto px-6 py-24">
-      <p className="font-mono text-xs text-glow tracking-widest uppercase mb-6">
-        // admin access
+         <p className="font-mono text-xs text-glow tracking-widest uppercase mb-6">
+        // admin only
       </p>
-      <h1 className="font-display text-3xl font-bold mb-8">Sign in</h1>
+      <h1 className="font-display text-3xl font-bold mb-3">Sign in</h1>
+      <p className="text-muted text-sm mb-8 leading-relaxed">
+        This area is for authors. Public accounts are{' '}
+        <span className="text-glow">coming soon</span> — access is granted
+        per person for now.
+      </p>
 
       <div className="space-y-4">
         <div>

@@ -13,8 +13,22 @@ function Admin() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const canSaveDraft = title.trim() && content.trim();
+  const canPublish =
+    title.trim() && excerpt.trim() && content.trim() && tags.trim();
+
   const handleSave = async (publish) => {
     setError(null);
+
+    if (publish && !canPublish) {
+      setError('Publishing requires title, excerpt, content, and at least one tag.');
+      return;
+    }
+    if (!publish && !canSaveDraft) {
+      setError('A draft needs at least a title and content.');
+      return;
+    }
+
     setSaving(true);
     try {
       const post = await createPost({
@@ -107,14 +121,14 @@ function Admin() {
         <div className="flex gap-3 pt-2">
           <button
             onClick={() => handleSave(true)}
-            disabled={saving || !title || !content}
+            disabled={saving || !canPublish}
             className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Publish'}
           </button>
           <button
             onClick={() => handleSave(false)}
-            disabled={saving || !title || !content}
+            disabled={saving || !canSaveDraft}
             className="rounded-lg border border-border px-6 py-3 font-display font-medium text-fg transition-colors hover:border-glow/40 disabled:opacity-40"
           >
             Save as draft
