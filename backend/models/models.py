@@ -14,7 +14,7 @@ post_tags = Table(
 
 class User(Base):
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     username = Column(String(100), unique=True, index=True, nullable=False)
@@ -23,13 +23,13 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
+
     # Relationship
     posts = relationship("Post", back_populates="author")
 
 class Post(Base):
     __tablename__ = "posts"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     slug = Column(String(255), unique=True, index=True, nullable=False)
     title = Column(String(255), nullable=False)
@@ -43,23 +43,26 @@ class Post(Base):
     author_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     published_at = Column(DateTime(timezone=True))
-    
+    # Scheduled drop: NULL = live immediately; a future datetime = locked
+    # (teaser only) until that moment, then auto-unlocks. Enforced server-side.
+    drop_date = Column(DateTime(timezone=True), nullable=True)
+
     # Relationships
     author = relationship("User", back_populates="posts")
     tags = relationship("Tag", secondary=post_tags, back_populates="posts")
 
 class Tag(Base):
     __tablename__ = "tags"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True, nullable=False)
     slug = Column(String(50), unique=True, nullable=False)
-    
+
     posts = relationship("Post", secondary=post_tags, back_populates="tags")
 
 class Subscriber(Base):
     __tablename__ = "subscribers"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     name = Column(String(255))

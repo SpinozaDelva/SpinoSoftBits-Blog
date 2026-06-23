@@ -21,7 +21,7 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     is_admin: bool = False
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -37,6 +37,9 @@ class PostCreate(BaseModel):
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
     is_featured: bool = False
+    # Optional scheduled drop. NULL/omitted = live immediately.
+    # A future datetime keeps the post locked (teaser only) until then.
+    drop_date: Optional[datetime] = None
     tags: Optional[List[str]] = []
 
 class PostUpdate(BaseModel):
@@ -46,6 +49,7 @@ class PostUpdate(BaseModel):
     cover_image: Optional[str] = None
     is_featured: Optional[bool] = None
     is_published: Optional[bool] = None
+    drop_date: Optional[datetime] = None
     tags: Optional[List[str]] = None
 
 class PostResponse(BaseModel):
@@ -53,16 +57,20 @@ class PostResponse(BaseModel):
     slug: str
     title: str
     excerpt: Optional[str] = None
-    content: str
+    # content is None when the post is locked (scheduled for a future drop).
+    content: Optional[str] = None
     cover_image: Optional[str] = None
     read_time: int
     is_published: bool
     is_featured: bool
+    # True while a scheduled post is still before its drop_date.
+    is_locked: bool = False
     views: int
     author: UserResponse
     created_at: datetime
     published_at: Optional[datetime] = None
-    
+    drop_date: Optional[datetime] = None
+
     class Config:
         from_attributes = True
 
@@ -78,6 +86,6 @@ class SubscriberResponse(BaseModel):
     name: Optional[str] = None
     is_active: bool
     subscribed_at: datetime
-    
+
     class Config:
         from_attributes = True
