@@ -39,6 +39,10 @@ class Post(Base):
     read_time = Column(Integer, default=5)
     is_published = Column(Boolean, default=False)
     is_featured = Column(Boolean, default=False)
+    # Pay-to-unlock: when True, public API returns only a teaser; full content
+    # requires a valid unlock token. price_cents is the one-time price (e.g. 300 = $3).
+    is_premium = Column(Boolean, default=False)
+    price_cents = Column(Integer, default=0)
     # Writing type — references a Category.slug (managed in the categories table).
     category = Column(String(40), default='tech')
     views = Column(Integer, default=0)
@@ -86,4 +90,17 @@ class Category(Base):
     serif = Column(Boolean, nullable=False, default=False)
     # Sort order in the tab bar / pickers.
     position = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Unlock(Base):
+    """A paid unlock for a premium post. The token is the permanent key
+    (stored in the buyer's browser + emailed to them)."""
+    __tablename__ = "unlocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), index=True, nullable=False)
+    email = Column(String(255), index=True)
+    token = Column(String(64), unique=True, index=True, nullable=False)
+    stripe_session_id = Column(String(255), unique=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

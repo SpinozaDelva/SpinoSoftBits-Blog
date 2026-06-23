@@ -93,3 +93,34 @@ def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: st
             })
         except Exception as e:  # noqa: BLE001
             print(f"[email] new-post send failed for {email}: {e}")
+
+
+def send_unlock_email(to_email: str, title: str, slug: str, token: str) -> None:
+    """Email a buyer their permanent unlock link after a successful purchase.
+    Best-effort; never raises."""
+    if not resend.api_key or not to_email:
+        return
+    link = f"{SITE_URL}/post/{slug}?key={token}"
+    inner = f"""
+      <p style="font-size:13px;color:#764ba2;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Unlocked ✓</p>
+      <h2 style="margin:0 0 12px;font-size:22px;">{title}</h2>
+      <p style="font-size:16px;line-height:1.6;color:#444;">
+        Thanks for your purchase! Your access is saved on this device — and this
+        link will unlock the full post on any device, anytime. Keep this email.
+      </p>
+      <p style="margin-top:22px;">
+        <a href="{link}" style="background:#667eea;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;">Read the full post</a>
+      </p>
+      <p style="font-size:12px;color:#888;margin-top:24px;word-break:break-all;">
+        Or paste this link: {link}
+      </p>
+    """
+    try:
+        resend.Emails.send({
+            "from": _sender(),
+            "to": [to_email],
+            "subject": f"Your unlock link — {title}",
+            "html": _shell(inner),
+        })
+    except Exception as e:  # noqa: BLE001
+        print(f"[email] unlock send failed for {to_email}: {e}")

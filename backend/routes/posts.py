@@ -57,28 +57,33 @@ def _teaser(text: Optional[str], max_words: int = 30) -> str:
     return " ".join(words[:max_words]).rstrip(".,;:") + "…"
 
 
-def _serialize(post) -> dict:
+def _serialize(post, unlocked: bool = False) -> dict:
     """Build the public payload.
 
     For a locked post we strip `content` entirely and trim the excerpt, so the
-    body never leaves the server before the drop — the lock can't be bypassed
-    via the URL or page source. We return a FRESH dict and never mutate the ORM
-    row, so the request-end commit can't write these stripped values back to
-    the database.
+    body never leaves the server before the drop. The same applies to a premium
+    post unless `unlocked=True` (a valid paid token was presented). We return a
+    FRESH dict and never mutate the ORM row, so the request-end commit can't
+    write these stripped values back to the database.
     """
     locked = _is_locked(post)
+    premium_locked = bool(post.is_premium) and not unlocked
+    withhold = locked or premium_locked
     return {
         "id": post.id,
         "slug": post.slug,
         "title": post.title,
         "excerpt": _teaser(post.excerpt) if locked else post.excerpt,
-        "content": None if locked else post.content,
+        "content": None if withhold else post.content,
         "cover_image": post.cover_image,
         "read_time": post.read_time,
         "is_published": post.is_published,
         "is_featured": post.is_featured,
         "category": post.category or "tech",
         "is_locked": locked,
+        "is_premium": bool(post.is_premium),
+        "price_cents": post.price_cents or 0,
+        "premium_locked": premium_locked,
         "views": post.views,
         "author": post.author,
         "created_at": post.created_at,
@@ -273,6 +278,8 @@ async def create_post(
         read_time=calculate_read_time(post_data.content),
         is_featured=post_data.is_featured,
         category=post_data.category or "tech",
+        is_premium=post_data.is_premium,
+        price_cents=post_data.price_cents or 0,
         drop_date=post_data.drop_date,
         author_id=current_user.id
     )
@@ -340,6 +347,10 @@ async def update_post(
         post.is_featured = post_data.is_featured
     if post_data.category is not None:
         post.category = post_data.category
+    if post_data.is_premium is not None:
+        post.is_premium = post_data.is_premium
+    if post_data.price_cents is not None:
+        post.price_cents = post_data.price_cents
     if post_data.is_published is not None:
         post.is_published = post_data.is_published
         if post_data.is_published and not post.published_at:

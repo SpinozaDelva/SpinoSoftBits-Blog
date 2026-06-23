@@ -33,6 +33,8 @@ function Admin() {
   const [isFeatured, setIsFeatured] = useState(false);
   const [coverImage, setCoverImage] = useState('');
   const [category, setCategory] = useState('tech');
+  const [isPremium, setIsPremium] = useState(false);
+  const [priceDollars, setPriceDollars] = useState(''); // string for the input
   const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
   const [isPublished, setIsPublished] = useState(false);
   const [loadingPost, setLoadingPost] = useState(isEdit);
@@ -59,6 +61,8 @@ function Admin() {
         setIsFeatured(Boolean(post.is_featured));
         setCoverImage(post.cover_image || '');
         setCategory(post.category || 'tech');
+        setIsPremium(Boolean(post.is_premium));
+        setPriceDollars(post.price_cents ? (post.price_cents / 100).toFixed(2) : '');
         setDropDate(isoToLocalInput(post.drop_date));
         setIsPublished(Boolean(post.is_published));
       } catch (err) {
@@ -90,6 +94,8 @@ function Admin() {
     content,
     is_featured: isFeatured,
     category,
+    is_premium: isPremium,
+    price_cents: isPremium ? Math.round((parseFloat(priceDollars) || 0) * 100) : 0,
     cover_image: coverImage.trim() || null,
     // datetime-local is local & naive; convert to UTC ISO. Empty = no drop.
     drop_date: dropDate ? new Date(dropDate).toISOString() : null,
@@ -281,6 +287,39 @@ function Admin() {
           />
           <span className="font-mono text-sm text-muted">Feature this post</span>
         </label>
+
+        {/* Pay-to-unlock */}
+        <div className="rounded-xl border border-border p-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isPremium}
+              onChange={(e) => setIsPremium(e.target.checked)}
+              className="h-4 w-4 accent-glow"
+            />
+            <span className="font-mono text-sm text-fg">🔓 Premium — readers pay to unlock</span>
+          </label>
+          {isPremium && (
+            <div className="mt-4">
+              <label className="block font-mono text-xs text-muted mb-2">price (USD)</label>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-fg">$</span>
+                <input
+                  type="number"
+                  min="0.50"
+                  step="0.50"
+                  value={priceDollars}
+                  onChange={(e) => setPriceDollars(e.target.value)}
+                  placeholder="3.00"
+                  className="w-28 rounded-lg border border-border bg-ink-raised px-3 py-2 text-fg font-mono outline-none focus:border-glow/50 transition-colors"
+                />
+              </div>
+              <p className="font-mono text-xs text-muted mt-2">
+                Public readers see only the teaser until they pay. Stripe minimum is $0.50.
+              </p>
+            </div>
+          )}
+        </div>
 
         {error && <p className="font-mono text-xs text-glow">{error}</p>}
 

@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPost } from '../api/posts';
+import {
+  startCheckout, confirmUnlock, verifyUnlock, getStoredToken, storeToken,
+} from '../api/unlocks';
 import useCategories from '../hooks/useCategories';
 
 const REDIRECT_SECONDS = 4;
@@ -158,31 +161,91 @@ function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [redirectIn, setRedirectIn] = useState(REDIRECT_SECONDS);
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     let active = true;
-    const fetchPost = async () => {
+
+    const cleanUrl = () => {
+      try {
+        window.history.replaceState({}, '', `/post/${slug}`);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const load = async () => {
       setLoading(true);
       setError(null);
       setRedirectIn(REDIRECT_SECONDS);
+
+      const params = new URLSearchParams(window.location.search);
+      const unlockedSession = params.get('unlocked'); // back from Stripe
+      const keyToken = params.get('key');             // emailed permanent link
+
       try {
-        const data = await getPost(slug);
+        let data;
+        if (unlockedSession) {
+          const res = await confirmUnlock(unlockedSession);
+          storeToken(slug, res.token);
+          data = res.post;
+          cleanUrl();
+        } else if (keyToken) {
+          const res = await verifyUnlock(slug, keyToken);
+          storeToken(slug, res.token);
+          data = res.post;
+          cleanUrl();
+        } else {
+          data = await getPost(slug);
+          // Premium but locked? Try a token we already have in this browser.
+          if (data && data.premium_locked) {
+            const stored = getStoredToken(slug);
+            if (stored) {
+              try {
+                const res = await verifyUnlock(slug, stored);
+                data = res.post;
+              } catch {
+                /* stale/invalid token — leave the paywall up */
+              }
+            }
+          }
+        }
         if (active) setPost(data);
       } catch (err) {
-        if (active) {
-          setError('Post not found.');
-          setPost(null);
-        }
         console.error(err);
+        // Unlock attempt failed — fall back to the public post so the paywall shows.
+        try {
+          const fallback = await getPost(slug);
+          if (active) setPost(fallback);
+        } catch {
+          if (active) {
+            setError('Post not found.');
+            setPost(null);
+          }
+        }
       } finally {
         if (active) setLoading(false);
       }
     };
-    fetchPost();
+
+    load();
     return () => {
       active = false;
     };
   }, [slug]);
+
+  const handleUnlock = async () => {
+    setUnlocking(true);
+    setError(null);
+    try {
+      const { url } = await startCheckout(slug);
+      window.location.href = url;
+    } catch (err) {
+      console.error(err);
+      setUnlocking(false);
+      setError('Could not start checkout. Please try again.');
+    }
+  };
 
   const notFound = !loading && (error || !post);
 
@@ -320,6 +383,38 @@ function PostDetail() {
               <p className="font-mono text-xs text-muted">
                 {dropsIn(post.drop_date)} — check back for the full read.
               </p>
+            </div>
+          </div>
+        </div>
+      ) : post.premium_locked ? (
+        /* Premium paywall: blurred teaser + unlock card */
+        <div className="relative">
+          <div aria-hidden="true" className="blur-sm select-none pointer-events-none space-y-4">
+            <p className="text-lg text-fg/80 leading-relaxed">{post.excerpt}</p>
+            <div className="space-y-3 pt-2">
+              <div className="h-4 rounded bg-fg/10 w-11/12" />
+              <div className="h-4 rounded bg-fg/10 w-full" />
+              <div className="h-4 rounded bg-fg/10 w-4/5" />
+              <div className="h-4 rounded bg-fg/10 w-10/12" />
+              <div className="h-4 rounded bg-fg/10 w-3/4" />
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="rounded-2xl border border-glow/30 bg-bg/85 backdrop-blur-md px-8 py-8 text-center shadow-xl max-w-sm">
+              <div className="text-3xl mb-3">🔒</div>
+              <p className="font-display text-xl font-semibold text-fg mb-1">Premium post</p>
+              <p className="font-mono text-sm text-muted mb-5">
+                Unlock the full read — yours to keep, on any device.
+              </p>
+              <button
+                onClick={handleUnlock}
+                disabled={unlocking}
+                className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {unlocking ? 'Redirecting…' : `Unlock for $${(post.price_cents / 100).toFixed(2)}`}
+              </button>
+              {error && <p className="font-mono text-xs text-glow mt-3">{error}</p>}
+              <p className="font-mono text-[11px] text-muted mt-3">Secure checkout via Stripe</p>
             </div>
           </div>
         </div>

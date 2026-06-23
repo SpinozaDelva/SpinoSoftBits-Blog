@@ -39,6 +39,9 @@ class PostCreate(BaseModel):
     is_featured: bool = False
     # Writing type: 'tech' | 'poem' | 'essay'.
     category: Optional[str] = 'tech'
+    # Pay-to-unlock.
+    is_premium: bool = False
+    price_cents: int = 0
     # Optional scheduled drop. NULL/omitted = live immediately.
     # A future datetime keeps the post locked (teaser only) until then.
     drop_date: Optional[datetime] = None
@@ -52,6 +55,8 @@ class PostUpdate(BaseModel):
     is_featured: Optional[bool] = None
     is_published: Optional[bool] = None
     category: Optional[str] = None
+    is_premium: Optional[bool] = None
+    price_cents: Optional[int] = None
     drop_date: Optional[datetime] = None
     tags: Optional[List[str]] = None
 
@@ -69,6 +74,11 @@ class PostResponse(BaseModel):
     category: Optional[str] = 'tech'
     # True while a scheduled post is still before its drop_date.
     is_locked: bool = False
+    # Pay-to-unlock state for the reader.
+    is_premium: bool = False
+    price_cents: int = 0
+    # True when premium content is being withheld (teaser only) in this response.
+    premium_locked: bool = False
     views: int
     author: UserResponse
     created_at: datetime
@@ -121,3 +131,21 @@ class CategoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ============ Unlock / Checkout Schemas ============
+class CheckoutRequest(BaseModel):
+    slug: str
+
+class CheckoutResponse(BaseModel):
+    url: str
+
+class VerifyRequest(BaseModel):
+    slug: str
+    token: str
+
+class ConfirmRequest(BaseModel):
+    session_id: str
+
+class UnlockResult(BaseModel):
+    token: str
+    post: PostResponse
