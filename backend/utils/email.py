@@ -124,3 +124,71 @@ def send_unlock_email(to_email: str, title: str, slug: str, token: str) -> None:
         })
     except Exception as e:  # noqa: BLE001
         print(f"[email] unlock send failed for {to_email}: {e}")
+
+
+# ─── Custom newsletter templates ─────────────────────────────────────────────
+def _esc_html(s) -> str:
+    return (str(s) if s is not None else "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _paragraphs(text: str) -> str:
+    """Turn plain text into paragraphs (double-newline = new paragraph)."""
+    blocks = [b.strip() for b in (text or "").split("\n\n") if b.strip()]
+    if not blocks:
+        blocks = [b.strip() for b in (text or "").split("\n") if b.strip()]
+    return "".join(
+        f'<p style="font-size:16px;line-height:1.7;color:#333;margin:0 0 16px;">'
+        f'{_esc_html(b)}</p>'
+        for b in blocks
+    )
+
+
+def render_email(subject, body, heading=None, cta_text=None, cta_url=None,
+                 template="update", unsub_url="", body_html=None):
+    """Build a branded HTML email body from simple inputs. If body_html is given
+    (admin-authored rich text), it's used directly; otherwise plain `body` is
+    escaped and split into paragraphs."""
+    accent = "#667eea"
+    heading_html = ""
+    if heading:
+        if template == "announcement":
+            heading_html = (
+                f'<p style="font-size:13px;color:{accent};text-transform:uppercase;'
+                f'letter-spacing:1px;margin:0 0 8px;">Announcement</p>'
+                f'<h2 style="margin:0 0 16px;font-size:26px;">{_esc_html(heading)}</h2>'
+            )
+        else:
+            heading_html = f'<h2 style="margin:0 0 16px;font-size:22px;">{_esc_html(heading)}</h2>'
+
+    cta_html = ""
+    if cta_text and cta_url:
+        cta_html = (
+            f'<p style="margin-top:22px;"><a href="{cta_url}" '
+            f'style="background:{accent};color:#fff;text-decoration:none;padding:11px 20px;'
+            f'border-radius:8px;font-size:14px;">{_esc_html(cta_text)}</a></p>'
+        )
+
+    unsub_html = (
+        f'<p style="font-size:12px;color:#888;margin-top:28px;">'
+        f'<a href="{unsub_url}" style="color:#888;">Unsubscribe</a></p>'
+        if unsub_url else ""
+    )
+
+    content = body_html if body_html else _paragraphs(body)
+    body_wrap = f'<div style="font-size:16px;line-height:1.7;color:#333;">{content}</div>'
+    return _shell(heading_html + body_wrap + cta_html + unsub_html)
+
+
+def send_custom_email(to_email: str, subject: str, html: str) -> None:
+    """Send a pre-rendered HTML email. Best-effort; never raises."""
+    if not resend.api_key or not to_email:
+        return
+    try:
+        resend.Emails.send({
+            "from": _sender(),
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+        })
+    except Exception as e:  # noqa: BLE001
+        print(f"[email] custom send failed for {to_email}: {e}")

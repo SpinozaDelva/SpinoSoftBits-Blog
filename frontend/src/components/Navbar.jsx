@@ -23,15 +23,10 @@ function Navbar() {
         <div className="flex items-center gap-6 font-mono text-xs tracking-widest uppercase">
           {loggedIn ? (
             <>
-              <Link to="/admin" className="text-muted hover:text-glow transition-colors">
-                Write
-              </Link>
-              <Link to="/manage" className="text-muted hover:text-glow transition-colors">
-                Manage
-              </Link>
-              <Link to="/categories" className="text-muted hover:text-glow transition-colors">
-                Categories
-              </Link>
+              <Link to="/admin" className="text-muted hover:text-glow transition-colors">Write</Link>
+              <Link to="/manage" className="text-muted hover:text-glow transition-colors">Manage</Link>
+              <Link to="/categories" className="text-muted hover:text-glow transition-colors">Categories</Link>
+              <Link to="/newsletter" className="text-muted hover:text-glow transition-colors">Newsletter</Link>
               <button onClick={handleLogout} className="text-muted hover:text-glow transition-colors uppercase tracking-widest">
                 Log out
               </button>

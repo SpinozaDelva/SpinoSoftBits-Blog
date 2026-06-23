@@ -149,3 +149,18 @@ class ConfirmRequest(BaseModel):
 class UnlockResult(BaseModel):
     token: str
     post: PostResponse
+
+# ============ Newsletter Send Schemas ============
+class BroadcastRequest(BaseModel):
+    subject: str
+    body: Optional[str] = ""
+    body_html: Optional[str] = None      # rich-text HTML from the editor
+    heading: Optional[str] = None
+    cta_text: Optional[str] = None
+    cta_url: Optional[str] = None
+    template: Optional[str] = "update"   # 'update' | 'announcement' | 'plain'
+    emails: Optional[List[str]] = None   # None/empty = all active subscribers
+
+class SendPostRequest(BaseModel):
+    slug: str
+    emails: Optional[List[str]] = None
