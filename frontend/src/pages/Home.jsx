@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { getPosts } from '../api/posts';
 import useCategories from '../hooks/useCategories';
 import SubscribeForm from '../components/SubscribeForm';
+import WorkCTA from '../components/WorkCTA';
 
 const SERIF = '"Fraunces", Georgia, serif';
 const ALL_ACCENT = '#E8B339';
@@ -208,6 +209,10 @@ function Home() {
         )}
 
         <div className="mt-16">
+          <WorkCTA />
+        </div>
+
+        <div className="mt-8">
           <SubscribeForm />
         </div>
       </main>

@@ -21,7 +21,11 @@ function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6 font-mono text-xs tracking-widest uppercase">
-          {loggedIn ? (
+          {/* Public */}
+          <Link to="/work" className="text-fg hover:text-glow transition-colors">Work with me</Link>
+
+          {/* Admin only */}
+          {loggedIn && (
             <>
               <Link to="/admin" className="text-muted hover:text-glow transition-colors">Write</Link>
               <Link to="/manage" className="text-muted hover:text-glow transition-colors">Manage</Link>
@@ -31,8 +35,6 @@ function Navbar() {
                 Log out
               </button>
             </>
-          ) : (
-            <span className="text-muted">Field Notes</span>
           )}
         </div>
       </div>

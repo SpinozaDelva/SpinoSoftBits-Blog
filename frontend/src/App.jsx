@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 import ManagePosts from './pages/ManagePosts';
 import ManageCategories from './pages/ManageCategories';
 import Newsletter from './pages/Newsletter';
+import WorkWithMe from './pages/WorkWithMe';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/post/:slug" element={<PostDetail />} />
+        <Route path="/work" element={<WorkWithMe />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/edit/:slug" element={<Admin />} />
