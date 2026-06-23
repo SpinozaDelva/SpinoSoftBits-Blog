@@ -11,6 +11,7 @@ const SERIF = '"Fraunces", Georgia, serif';
 
 // Curated two-color combos (one-click presets).
 const PRESETS = [
+  { name: 'Soft Mint & White', primary: '#6EE7B7', secondary: '#FFFFFF' },
   { name: 'Terracotta & Cream', primary: '#C96F4A', secondary: '#F5EBDC' },
   { name: 'Cacao & Caramel', primary: '#C68E5A', secondary: '#4B3621' },
   { name: 'Mustard & Forest', primary: '#C9A227', secondary: '#2F4A35' },

@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - Blog home with category tabs + per-category theming
+// src/pages/Home.jsx - Blog home: category tabs, per-category bright cards, vertical auto-scroll
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getPosts } from '../api/posts';
@@ -6,43 +6,26 @@ import SubscribeForm from '../components/SubscribeForm';
 
 const SERIF = '"Fraunces", Georgia, serif';
 
-// Per-category identity — used by the tabs, the hero, and the cards.
 const CATEGORIES = {
   all:    { label: 'All',                accent: '#E8B339', serif: false },
   tech:   { label: 'Tech',               accent: '#5AA9E6', serif: false },
   poem:   { label: 'Poems',              accent: '#C9925E', serif: true  },
-  health: { label: 'Health & Lifestyle', accent: '#3CA88E', serif: false },
+  health: { label: 'Health & Lifestyle', accent: '#6EE7B7', serif: false },
 };
 const TABS = ['all', 'tech', 'poem', 'health'];
 
-// Hero copy + mood per selected tab. (Edit these strings freely.)
 const HERO = {
-  all: {
-    eyebrow: '// the blog',
-    heading: 'Field notes, verses, and everything in between.',
-    sub: 'Tech, poems, and health & lifestyle — building real things and writing about it.',
-  },
-  tech: {
-    eyebrow: '// engineering log',
-    heading: 'Building software for the businesses that build Brooklyn.',
-    sub: 'Python, React, and the messy decisions in between.',
-  },
-  poem: {
-    eyebrow: '// verses',
-    heading: 'Lines worth slowing down for.',
-    sub: 'Small poems on code, the city, and being human.',
-  },
-  health: {
-    eyebrow: '// field notes',
-    heading: 'Build a life that holds up.',
-    sub: 'Notes on energy, focus, and living well while you build.',
-  },
+  all:    { eyebrow: '// the blog',        heading: 'Field notes, verses, and everything in between.', sub: 'Tech, poems, and health & lifestyle — building real things and writing about it.' },
+  tech:   { eyebrow: '// engineering log', heading: 'Building software for the businesses that build Brooklyn.', sub: 'Python, React, and the messy decisions in between.' },
+  poem:   { eyebrow: '// verses',          heading: 'Lines worth slowing down for.', sub: 'Small poems on code, the city, and being human.' },
+  health: { eyebrow: '// field notes',     heading: 'Build a life that holds up.', sub: 'Notes on energy, focus, and living well while you build.' },
 };
 
 const hexToRgba = (hex, a) => {
-  const h = hex.replace('#', '');
+  const h = (hex || '#000000').replace('#', '');
   const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
   const n = parseInt(full, 16);
+  if (Number.isNaN(n)) return `rgba(0,0,0,${a})`;
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 };
 
@@ -65,9 +48,7 @@ function Home() {
         if (on) setLoading(false);
       }
     })();
-    return () => {
-      on = false;
-    };
+    return () => { on = false; };
   }, []);
 
   const cat = CATEGORIES[active];
@@ -79,24 +60,74 @@ function Home() {
     [posts, active]
   );
 
+  // Animate the feed only when there's enough to scroll through.
+  const animate = visible.length > 3;
+  const duration = Math.max(20, visible.length * 5); // ~5s per card, easy pace
+
+  const renderCard = (post, key) => {
+    const pc = CATEGORIES[post.category] || CATEGORIES.tech;
+    return (
+      <Link to={`/post/${post.slug}`} key={key} className="block">
+        <article
+          className="feed-card relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+          style={{
+            '--accent': pc.accent,
+            background: `linear-gradient(135deg, #ffffff 0%, ${hexToRgba(pc.accent, 0.42)} 100%)`,
+          }}
+        >
+          <div className="flex items-center gap-3 font-mono text-xs mb-3" style={{ color: 'rgba(0,0,0,0.5)' }}>
+            <span className="uppercase tracking-widest font-semibold" style={{ color: pc.accent }}>{pc.label}</span>
+            <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
+            <span>{post.read_time} min</span>
+            <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
+            <span>{post.views} views</span>
+            {post.is_featured && (
+              <span className="ml-auto rounded-full px-2 py-0.5" style={{ border: '1px solid rgba(0,0,0,0.15)', color: 'rgba(0,0,0,0.6)' }}>
+                featured
+              </span>
+            )}
+          </div>
+          <h3
+            className="font-display text-2xl font-semibold leading-snug mb-2"
+            style={pc.serif ? { color: '#1a1a1a', fontFamily: SERIF } : { color: '#1a1a1a' }}
+          >
+            {post.title}
+          </h3>
+          <p className="leading-relaxed mb-4" style={{ color: 'rgba(0,0,0,0.7)' }}>{post.excerpt}</p>
+          <div className="font-mono text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
+            {post.author.full_name || post.author.username}
+          </div>
+        </article>
+      </Link>
+    );
+  };
+
   return (
     <div className="min-h-screen">
+      <style>{`
+        @keyframes feedScroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+        .feed-track { animation: feedScroll var(--feed-dur, 40s) linear infinite; will-change: transform; }
+        .feed-viewport:hover .feed-track { animation-play-state: paused; }
+        .feed-mask {
+          -webkit-mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 85%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 85%, transparent);
+        }
+        .feed-card { transition: transform .3s ease, box-shadow .3s ease; box-shadow: 0 4px 14px -8px rgba(0,0,0,0.4); }
+        .feed-card:hover { transform: translateY(-5px) scale(1.012); box-shadow: 0 26px 52px -18px var(--accent); }
+        @media (prefers-reduced-motion: reduce) { .feed-track { animation: none; } }
+      `}</style>
+
       {/* Hero — re-themes per category */}
       <header
         className="relative overflow-hidden border-b border-border transition-all duration-500"
-        style={{
-          background: `radial-gradient(120% 100% at 25% 0%, ${hexToRgba(accent, 0.10)}, transparent 60%)`,
-        }}
+        style={{ background: `radial-gradient(120% 100% at 25% 0%, ${hexToRgba(accent, 0.10)}, transparent 60%)` }}
       >
         <div
           className="absolute -top-40 left-1/4 h-96 w-96 rounded-full opacity-25 blur-[120px] transition-all duration-500"
           style={{ backgroundColor: accent }}
         />
         <div className="relative max-w-5xl mx-auto px-6 py-24">
-          <p
-            className="font-mono text-xs tracking-widest uppercase mb-6 transition-colors duration-500"
-            style={{ color: accent }}
-          >
+          <p className="font-mono text-xs tracking-widest uppercase mb-6 transition-colors duration-500" style={{ color: accent }}>
             {hero.eyebrow}
           </p>
           <h1
@@ -105,10 +136,7 @@ function Home() {
           >
             {hero.heading}
           </h1>
-          <p
-            className="mt-6 text-lg text-muted max-w-xl leading-relaxed"
-            style={cat.serif ? { fontFamily: SERIF } : undefined}
-          >
+          <p className="mt-6 text-lg text-muted max-w-xl leading-relaxed" style={cat.serif ? { fontFamily: SERIF } : undefined}>
             {hero.sub}
           </p>
         </div>
@@ -149,56 +177,24 @@ function Home() {
           <p className="font-mono text-sm text-muted">Nothing here yet in this category.</p>
         )}
 
-        <div className="space-y-4">
-          {visible.map((post) => {
-            const pc = CATEGORIES[post.category] || CATEGORIES.tech;
-            return (
-              <Link to={`/post/${post.slug}`} key={post.id} className="block group">
-                <article
-                  className="relative overflow-hidden rounded-xl p-6 pl-7 cursor-pointer transition-all duration-200 hover:shadow-lg"
-                  style={{
-                    background: `linear-gradient(135deg, #ffffff 0%, ${hexToRgba(pc.accent, 0.22)} 100%)`,
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-0 top-0 h-full w-1.5"
-                    style={{ background: pc.accent }}
-                  />
-                  <div className="flex items-center gap-3 font-mono text-xs mb-3" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                    <span className="uppercase tracking-widest font-semibold" style={{ color: pc.accent }}>
-                      {pc.label}
-                    </span>
-                    <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
-                    <span>{post.read_time} min</span>
-                    <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
-                    <span>{post.views} views</span>
-                    {post.is_featured && (
-                      <span
-                        className="ml-auto rounded-full px-2 py-0.5"
-                        style={{ border: '1px solid rgba(0,0,0,0.15)', color: 'rgba(0,0,0,0.6)' }}
-                      >
-                        featured
-                      </span>
-                    )}
-                  </div>
-                  <h3
-                    className="font-display text-2xl font-semibold leading-snug mb-2"
-                    style={pc.serif ? { color: '#1a1a1a', fontFamily: SERIF } : { color: '#1a1a1a' }}
-                  >
-                    {post.title}
-                  </h3>
-                  <p className="leading-relaxed mb-4" style={{ color: 'rgba(0,0,0,0.7)' }}>
-                    {post.excerpt}
-                  </p>
-                  <div className="font-mono text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                    {post.author.full_name || post.author.username}
-                  </div>
-                </article>
-              </Link>
-            );
-          })}
-        </div>
+        {/* Feed: auto-scroll when there are more than 3, otherwise a static stack */}
+        {animate ? (
+          <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
+            <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
+              {[...visible, ...visible].map((post, i) => renderCard(post, `${post.id}-${i}`))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {visible.map((post) => renderCard(post, post.id))}
+          </div>
+        )}
+
+        {animate && (
+          <p className="mt-4 text-center font-mono text-[11px] text-muted tracking-widest uppercase">
+            ↑ scrolling · hover to pause
+          </p>
+        )}
 
         {/* Newsletter signup */}
         <div className="mt-16">
