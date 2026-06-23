@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createPost, updatePost, publishPost, getAllPostsAdmin } from '../api/posts';
+import useCategories from '../hooks/useCategories';
 
 // Smallest selectable drop time = now, in the local format datetime-local wants.
 const nowLocalInput = () => {
@@ -23,6 +24,7 @@ function Admin() {
   const navigate = useNavigate();
   const { slug } = useParams();       // present => edit mode
   const isEdit = Boolean(slug);
+  const { categories } = useCategories();
 
   const [title, setTitle] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -70,6 +72,13 @@ function Admin() {
       active = false;
     };
   }, [isEdit, slug]);
+
+  // For new posts, make sure the selected category actually exists.
+  useEffect(() => {
+    if (!isEdit && categories.length && !categories.some((c) => c.slug === category)) {
+      setCategory(categories[0].slug);
+    }
+  }, [categories, isEdit, category]);
 
   const canSaveDraft = title.trim() && content.trim();
   const canPublish =
@@ -195,24 +204,28 @@ function Admin() {
         <div>
           <label className="block font-mono text-xs text-muted mb-2">writing type</label>
           <div className="flex flex-wrap gap-2">
-            {[
-              { value: 'tech', label: 'Tech' },
-              { value: 'poem', label: 'Poems' },
-              { value: 'health', label: 'Health & Lifestyle' },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setCategory(opt.value)}
-                className={`rounded-lg border px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-                  category === opt.value
-                    ? 'border-glow/60 bg-glow/10 text-glow'
-                    : 'border-border text-muted hover:border-glow/30'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            {categories.length === 0 && (
+              <span className="font-mono text-xs text-muted">No categories yet — add some under “Categories”.</span>
+            )}
+            {categories.map((c) => {
+              const on = category === c.slug;
+              return (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => setCategory(c.slug)}
+                  className="flex items-center gap-2 rounded-lg border px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors"
+                  style={
+                    on
+                      ? { borderColor: c.color_primary, background: `${c.color_primary}1f`, color: c.color_primary }
+                      : { borderColor: 'var(--color-border, #2a2a35)', color: 'var(--color-muted, #8a8a99)' }
+                  }
+                >
+                  <span className="h-3 w-3 rounded-full" style={{ background: c.color_primary }} />
+                  {c.name}
+                </button>
+              );
+            })}
           </div>
           <p className="font-mono text-xs text-muted mt-2">
             Sets the mood of the post page — each type gets its own look.

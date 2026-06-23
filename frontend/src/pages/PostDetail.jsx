@@ -2,15 +2,34 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPost } from '../api/posts';
+import useCategories from '../hooks/useCategories';
 
 const REDIRECT_SECONDS = 4;
 const SERIF = '"Fraunces", Georgia, "Times New Roman", serif';
 
-// Each writing type gets its own mood on the reading page.
-const THEMES = {
-  tech: {
-    label: 'Tech',
-    accent: 'var(--color-glow)',
+// A post's mood is built from its category record (live from the categories
+// table). Serif categories get the lyrical, centered treatment; others get the
+// standard reading layout. The accent comes from the category's primary color.
+const buildTheme = (rec) => {
+  const accent = rec?.color_primary || 'var(--color-glow)';
+  const label = rec?.name || 'Writing';
+  const serif = !!rec?.serif;
+  if (serif) {
+    return {
+      label,
+      accent,
+      wrap: 'max-w-xl',
+      align: 'text-center',
+      centerMeta: true,
+      titleClass: 'text-4xl md:text-5xl font-semibold italic',
+      titleStyle: { fontFamily: SERIF },
+      bodyClass: 'text-xl leading-loose',
+      bodyStyle: { fontFamily: SERIF },
+    };
+  }
+  return {
+    label,
+    accent,
     wrap: 'max-w-3xl',
     align: 'text-left',
     centerMeta: false,
@@ -18,29 +37,7 @@ const THEMES = {
     titleStyle: {},
     bodyClass: 'text-lg leading-relaxed',
     bodyStyle: {},
-  },
-  poem: {
-    label: 'Poems',
-    accent: '#c08a5e',
-    wrap: 'max-w-xl',
-    align: 'text-center',
-    centerMeta: true,
-    titleClass: 'text-4xl md:text-5xl font-semibold italic',
-    titleStyle: { fontFamily: SERIF },
-    bodyClass: 'text-xl leading-loose',
-    bodyStyle: { fontFamily: SERIF },
-  },
-  health: {
-    label: 'Health & Lifestyle',
-    accent: '#3CA88E',
-    wrap: 'max-w-2xl',
-    align: 'text-left',
-    centerMeta: false,
-    titleClass: 'font-display text-4xl md:text-5xl font-semibold tracking-tight',
-    titleStyle: {},
-    bodyClass: 'text-lg leading-loose',
-    bodyStyle: {},
-  },
+  };
 };
 
 const formatDrop = (iso) =>
@@ -155,6 +152,7 @@ function ShareBar({ url, title }) {
 function PostDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { categories } = useCategories();
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -224,7 +222,8 @@ function PostDetail() {
   }
 
   const isLocked = post.is_locked;
-  const theme = THEMES[post.category] || THEMES.tech;
+  const categoryRec = categories.find((c) => c.slug === post.category);
+  const theme = buildTheme(categoryRec);
 
   return (
     <article className={`${theme.wrap} mx-auto px-6 py-16`}>

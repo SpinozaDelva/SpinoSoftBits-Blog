@@ -1,20 +1,16 @@
-// src/pages/Home.jsx - Blog home: category tabs, per-category bright cards, vertical auto-scroll
+// src/pages/Home.jsx - Blog home: live category tabs, per-category bright cards, vertical auto-scroll
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getPosts } from '../api/posts';
+import useCategories from '../hooks/useCategories';
 import SubscribeForm from '../components/SubscribeForm';
 
 const SERIF = '"Fraunces", Georgia, serif';
+const ALL_ACCENT = '#E8B339';
+const FALLBACK_ACCENT = '#5AA9E6';
 
-const CATEGORIES = {
-  all:    { label: 'All',                accent: '#E8B339', serif: false },
-  tech:   { label: 'Tech',               accent: '#5AA9E6', serif: false },
-  poem:   { label: 'Poems',              accent: '#C9925E', serif: true  },
-  health: { label: 'Health & Lifestyle', accent: '#6EE7B7', serif: false },
-};
-const TABS = ['all', 'tech', 'poem', 'health'];
-
-const HERO = {
+// Curated hero copy for the original categories; new ones get generic copy.
+const HERO_KNOWN = {
   all:    { eyebrow: '// the blog',        heading: 'Field notes, verses, and everything in between.', sub: 'Tech, poems, and health & lifestyle — building real things and writing about it.' },
   tech:   { eyebrow: '// engineering log', heading: 'Building software for the businesses that build Brooklyn.', sub: 'Python, React, and the messy decisions in between.' },
   poem:   { eyebrow: '// verses',          heading: 'Lines worth slowing down for.', sub: 'Small poems on code, the city, and being human.' },
@@ -34,6 +30,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [active, setActive] = useState('all');
+  const { categories } = useCategories();
 
   useEffect(() => {
     let on = true;
@@ -51,21 +48,34 @@ function Home() {
     return () => { on = false; };
   }, []);
 
-  const cat = CATEGORIES[active];
-  const hero = HERO[active];
+  // slug -> theme meta, built from the live categories table
+  const catMap = useMemo(() => {
+    const m = {};
+    for (const c of categories) {
+      m[c.slug] = { label: c.name, accent: c.color_primary, serif: c.serif };
+    }
+    return m;
+  }, [categories]);
+
+  const metaFor = (slug) =>
+    catMap[slug] || { label: slug || 'Writing', accent: FALLBACK_ACCENT, serif: false };
+
+  const tabs = ['all', ...categories.map((c) => c.slug)];
+  const cat = active === 'all' ? { label: 'All', accent: ALL_ACCENT, serif: false } : metaFor(active);
   const accent = cat.accent;
+  const hero =
+    HERO_KNOWN[active] || { eyebrow: `// ${cat.label.toLowerCase()}`, heading: `${cat.label}.`, sub: '' };
 
   const visible = useMemo(
     () => (active === 'all' ? posts : posts.filter((p) => (p.category || 'tech') === active)),
     [posts, active]
   );
 
-  // Animate the feed only when there's enough to scroll through.
   const animate = visible.length > 3;
-  const duration = Math.max(20, visible.length * 5); // ~5s per card, easy pace
+  const duration = Math.max(20, visible.length * 5);
 
   const renderCard = (post, key) => {
-    const pc = CATEGORIES[post.category] || CATEGORIES.tech;
+    const pc = metaFor(post.category);
     return (
       <Link to={`/post/${post.slug}`} key={key} className="block">
         <article
@@ -136,9 +146,11 @@ function Home() {
           >
             {hero.heading}
           </h1>
-          <p className="mt-6 text-lg text-muted max-w-xl leading-relaxed" style={cat.serif ? { fontFamily: SERIF } : undefined}>
-            {hero.sub}
-          </p>
+          {hero.sub && (
+            <p className="mt-6 text-lg text-muted max-w-xl leading-relaxed" style={cat.serif ? { fontFamily: SERIF } : undefined}>
+              {hero.sub}
+            </p>
+          )}
         </div>
       </header>
 
@@ -148,8 +160,8 @@ function Home() {
           <div className="flex items-center gap-4 flex-wrap">
             <h2 className="font-mono text-xs text-muted tracking-widest uppercase">Latest writing</h2>
             <div className="flex items-center gap-1.5 flex-wrap">
-              {TABS.map((key) => {
-                const c = CATEGORIES[key];
+              {tabs.map((key) => {
+                const meta = key === 'all' ? { label: 'All', accent: ALL_ACCENT } : metaFor(key);
                 const on = active === key;
                 return (
                   <button
@@ -158,9 +170,9 @@ function Home() {
                     className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-widest transition-colors ${
                       on ? '' : 'border-border text-muted hover:text-fg hover:border-glow/40'
                     }`}
-                    style={on ? { background: c.accent, borderColor: c.accent, color: '#0b0b0f' } : undefined}
+                    style={on ? { background: meta.accent, borderColor: meta.accent, color: '#0b0b0f' } : undefined}
                   >
-                    {c.label}
+                    {meta.label}
                   </button>
                 );
               })}
@@ -177,7 +189,6 @@ function Home() {
           <p className="font-mono text-sm text-muted">Nothing here yet in this category.</p>
         )}
 
-        {/* Feed: auto-scroll when there are more than 3, otherwise a static stack */}
         {animate ? (
           <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
             <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
@@ -196,7 +207,6 @@ function Home() {
           </p>
         )}
 
-        {/* Newsletter signup */}
         <div className="mt-16">
           <SubscribeForm />
         </div>
