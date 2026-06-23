@@ -76,6 +76,7 @@ def _serialize(post) -> dict:
         "read_time": post.read_time,
         "is_published": post.is_published,
         "is_featured": post.is_featured,
+        "category": post.category or "tech",
         "is_locked": locked,
         "views": post.views,
         "author": post.author,
@@ -262,6 +263,7 @@ async def create_post(
         cover_image=post_data.cover_image,
         read_time=calculate_read_time(post_data.content),
         is_featured=post_data.is_featured,
+        category=post_data.category or "tech",
         drop_date=post_data.drop_date,
         author_id=current_user.id
     )
@@ -324,6 +326,8 @@ async def update_post(
         post.cover_image = post_data.cover_image
     if post_data.is_featured is not None:
         post.is_featured = post_data.is_featured
+    if post_data.category is not None:
+        post.category = post_data.category
     if post_data.is_published is not None:
         post.is_published = post_data.is_published
         if post_data.is_published and not post.published_at:

@@ -39,6 +39,8 @@ class Post(Base):
     read_time = Column(Integer, default=5)
     is_published = Column(Boolean, default=False)
     is_featured = Column(Boolean, default=False)
+    # Writing type: 'tech' | 'poem' | 'essay' — drives the per-category theme.
+    category = Column(String(20), default='tech')
     views = Column(Integer, default=0)
     author_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

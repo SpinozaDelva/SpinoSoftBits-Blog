@@ -29,6 +29,7 @@ function Admin() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [category, setCategory] = useState('tech');
   const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
   const [isPublished, setIsPublished] = useState(false);
   const [loadingPost, setLoadingPost] = useState(isEdit);
@@ -53,6 +54,7 @@ function Admin() {
         setContent(post.content || '');
         setTags((post.tags || []).map((t) => t.name).join(', '));
         setIsFeatured(Boolean(post.is_featured));
+        setCategory(post.category || 'tech');
         setDropDate(isoToLocalInput(post.drop_date));
         setIsPublished(Boolean(post.is_published));
       } catch (err) {
@@ -76,6 +78,7 @@ function Admin() {
     excerpt,
     content,
     is_featured: isFeatured,
+    category,
     // datetime-local is local & naive; convert to UTC ISO. Empty = no drop.
     drop_date: dropDate ? new Date(dropDate).toISOString() : null,
     tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -161,6 +164,33 @@ function Admin() {
             className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg leading-relaxed outline-none focus:border-glow/50 transition-colors resize-y"
             placeholder="Write your post here…"
           />
+        </div>
+
+        <div>
+          <label className="block font-mono text-xs text-muted mb-2">writing type</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: 'tech', label: 'Tech' },
+              { value: 'poem', label: 'Poems' },
+              { value: 'health', label: 'Health & Lifestyle' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setCategory(opt.value)}
+                className={`rounded-lg border px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
+                  category === opt.value
+                    ? 'border-glow/60 bg-glow/10 text-glow'
+                    : 'border-border text-muted hover:border-glow/30'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="font-mono text-xs text-muted mt-2">
+            Sets the mood of the post page — each type gets its own look.
+          </p>
         </div>
 
         <div>

@@ -1,5 +1,5 @@
 // src/pages/ManagePosts.jsx - Admin: view drafts, edit, delete, publish
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllPostsAdmin, deletePost, publishPost } from '../api/posts';
 
@@ -19,32 +19,39 @@ function ManagePosts() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(null); // slug currently being acted on
+  const [busy, setBusy] = useState(null);       // slug currently being acted on
+  const [refreshKey, setRefreshKey] = useState(0); // bump to re-fetch
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getAllPostsAdmin();
-      setPosts(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError('Could not load posts. Make sure you are logged in as admin.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Fetch the list whenever refreshKey changes. The fetch lives inside the
+  // effect, so there's no external dependency for any linter to flag.
   useEffect(() => {
-    load();
-  }, [load]);
+    let active = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getAllPostsAdmin();
+        if (active) setPosts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (active) setError('Could not load posts. Make sure you are logged in as admin.');
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
+
+  const reload = () => setRefreshKey((k) => k + 1);
 
   const handleDelete = async (slug, title) => {
     if (!window.confirm(`Delete "${title}"? This can't be undone.`)) return;
     setBusy(slug);
     try {
       await deletePost(slug);
-      await load();
+      reload();
     } catch (err) {
       setError('Delete failed.');
       console.error(err);
@@ -57,7 +64,7 @@ function ManagePosts() {
     setBusy(slug);
     try {
       await publishPost(slug);
-      await load();
+      reload();
     } catch (err) {
       setError('Publish failed.');
       console.error(err);

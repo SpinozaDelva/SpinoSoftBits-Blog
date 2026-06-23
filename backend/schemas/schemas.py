@@ -37,6 +37,8 @@ class PostCreate(BaseModel):
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
     is_featured: bool = False
+    # Writing type: 'tech' | 'poem' | 'essay'.
+    category: Optional[str] = 'tech'
     # Optional scheduled drop. NULL/omitted = live immediately.
     # A future datetime keeps the post locked (teaser only) until then.
     drop_date: Optional[datetime] = None
@@ -49,6 +51,7 @@ class PostUpdate(BaseModel):
     cover_image: Optional[str] = None
     is_featured: Optional[bool] = None
     is_published: Optional[bool] = None
+    category: Optional[str] = None
     drop_date: Optional[datetime] = None
     tags: Optional[List[str]] = None
 
@@ -63,6 +66,7 @@ class PostResponse(BaseModel):
     read_time: int
     is_published: bool
     is_featured: bool
+    category: Optional[str] = 'tech'
     # True while a scheduled post is still before its drop_date.
     is_locked: bool = False
     views: int
