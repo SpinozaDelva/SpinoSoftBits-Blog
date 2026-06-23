@@ -7,6 +7,7 @@ import PostDetail from './pages/PostDetail';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import ManagePosts from './pages/ManagePosts';
+import ManageCategories from './pages/ManageCategories';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/edit/:slug" element={<Admin />} />
         <Route path="/manage" element={<ManagePosts />} />
+        <Route path="/categories" element={<ManageCategories />} />
       </Routes>
       <Footer />
     </BrowserRouter>

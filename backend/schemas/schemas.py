@@ -93,3 +93,31 @@ class SubscriberResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ============ Category Schemas ============
+class CategoryCreate(BaseModel):
+    name: str
+    slug: Optional[str] = None          # auto-generated from name if omitted
+    color_primary: str = "#E8B339"
+    color_secondary: str = "#FFFFFF"
+    serif: bool = False
+    position: int = 0
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    color_primary: Optional[str] = None
+    color_secondary: Optional[str] = None
+    serif: Optional[bool] = None
+    position: Optional[int] = None
+
+class CategoryResponse(BaseModel):
+    id: int
+    slug: str
+    name: str
+    color_primary: str
+    color_secondary: str
+    serif: bool
+    position: int
+
+    class Config:
+        from_attributes = True

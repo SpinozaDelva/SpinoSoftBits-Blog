@@ -39,8 +39,8 @@ class Post(Base):
     read_time = Column(Integer, default=5)
     is_published = Column(Boolean, default=False)
     is_featured = Column(Boolean, default=False)
-    # Writing type: 'tech' | 'poem' | 'essay' — drives the per-category theme.
-    category = Column(String(20), default='tech')
+    # Writing type — references a Category.slug (managed in the categories table).
+    category = Column(String(40), default='tech')
     views = Column(Integer, default=0)
     author_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -71,3 +71,19 @@ class Subscriber(Base):
     interests = Column(String(500))
     is_active = Column(Boolean, default=True)
     subscribed_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(40), unique=True, index=True, nullable=False)
+    name = Column(String(80), nullable=False)
+    # Two-color combo that drives the theme (primary = accent, secondary = blend).
+    color_primary = Column(String(9), nullable=False, default="#E8B339")
+    color_secondary = Column(String(9), nullable=False, default="#FFFFFF")
+    # Use a serif display font for this category (e.g. Poems).
+    serif = Column(Boolean, nullable=False, default=False)
+    # Sort order in the tab bar / pickers.
+    position = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
