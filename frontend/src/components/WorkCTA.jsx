@@ -1,6 +1,4 @@
-// src/components/WorkCTA.jsx - "Work with me" call-to-action band
-import { Link } from 'react-router-dom';
-
+// src/components/WorkCTA.jsx - links out to the main portfolio site
 function WorkCTA() {
   return (
     <div
@@ -15,14 +13,16 @@ function WorkCTA() {
       </p>
       <h3 className="font-display text-2xl md:text-3xl font-bold mb-3">Have a project? Let's build it.</h3>
       <p className="text-muted mb-7 max-w-lg mx-auto leading-relaxed">
-        Web apps, full-stack systems, MVPs — from idea to live. I'm taking on freelance work.
+        Web apps, full-stack systems, MVPs — from idea to live. See my work and get in touch.
       </p>
-      <Link
-        to="/work"
+      <a
+        href="https://spinosoftbits.com"
+        target="_blank"
+        rel="noopener noreferrer"
         className="inline-block rounded-xl bg-glow px-7 py-3.5 font-display font-bold text-ink transition-transform hover:scale-[1.03]"
       >
-        Work with me →
-      </Link>
+        View my portfolio →
+      </a>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import Admin from './pages/Admin';
 import ManagePosts from './pages/ManagePosts';
 import ManageCategories from './pages/ManageCategories';
 import Newsletter from './pages/Newsletter';
-import WorkWithMe from './pages/WorkWithMe';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -18,13 +18,13 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/post/:slug" element={<PostDetail />} />
-        <Route path="/work" element={<WorkWithMe />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/edit/:slug" element={<Admin />} />
         <Route path="/manage" element={<ManagePosts />} />
         <Route path="/categories" element={<ManageCategories />} />
         <Route path="/newsletter" element={<Newsletter />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       <Footer />
     </BrowserRouter>

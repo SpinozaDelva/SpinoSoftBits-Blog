@@ -21,12 +21,20 @@ function Navbar() {
         </Link>
 
         <div className="flex items-center gap-6 font-mono text-xs tracking-widest uppercase">
-          {/* Public */}
-          <Link to="/work" className="text-fg hover:text-glow transition-colors">Work with me</Link>
+          {/* Public: link out to the main portfolio site */}
+          <a
+            href="https://spinosoftbits.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-fg hover:text-glow transition-colors"
+          >
+            Portfolio ↗
+          </a>
 
           {/* Admin only */}
           {loggedIn && (
             <>
+              <Link to="/dashboard" className="text-muted hover:text-glow transition-colors">Dashboard</Link>
               <Link to="/admin" className="text-muted hover:text-glow transition-colors">Write</Link>
               <Link to="/manage" className="text-muted hover:text-glow transition-colors">Manage</Link>
               <Link to="/categories" className="text-muted hover:text-glow transition-colors">Categories</Link>
