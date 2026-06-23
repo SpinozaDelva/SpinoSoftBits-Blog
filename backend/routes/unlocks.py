@@ -16,8 +16,8 @@ from schemas.schemas import (
 )
 from utils.email import send_unlock_email
 
-# Import the same serializer the post routes use, so unlocked payloads match.
-from routes.posts import _serialize
+# NOTE: _serialize is imported lazily inside the functions below to avoid a
+# circular import (routes package <-> routes.posts) at module load time.
 
 router = APIRouter()
 
@@ -92,6 +92,7 @@ async def create_checkout(data: CheckoutRequest, db: AsyncSession = Depends(get_
 async def confirm(data: ConfirmRequest, db: AsyncSession = Depends(get_db)):
     """Verify a Checkout session with Stripe and return the unlock token + full
     post. Works even if the webhook hasn't fired yet (idempotent)."""
+    from routes.posts import _serialize  # lazy import (avoids circular load)
     if not stripe.api_key:
         raise HTTPException(status_code=503, detail="Payments are not configured.")
     try:
@@ -120,6 +121,7 @@ async def confirm(data: ConfirmRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/verify", response_model=UnlockResult)
 async def verify(data: VerifyRequest, db: AsyncSession = Depends(get_db)):
     """Exchange a stored/emailed token for the full post."""
+    from routes.posts import _serialize  # lazy import (avoids circular load)
     post = await _post_with_rels(db, slug=data.slug)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
