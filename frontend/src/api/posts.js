@@ -19,6 +19,12 @@ export const getPost = async (slug) => {
   return response.data;
 };
 
+// Admin: every post incl. drafts & scheduled, with full content
+export const getAllPostsAdmin = async () => {
+  const response = await client.get('/posts/admin/all');
+  return response.data;
+};
+
 // Create a new post (admin)
 export const createPost = async (postData) => {
   const response = await client.post('/posts/', postData);

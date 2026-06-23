@@ -85,6 +85,28 @@ def _serialize(post) -> dict:
     }
 
 
+def _admin_serialize(post) -> dict:
+    """Admin view — full content always, plus the computed lock state so the
+    management UI can show Draft / Scheduled / Published at a glance."""
+    return {
+        "id": post.id,
+        "slug": post.slug,
+        "title": post.title,
+        "excerpt": post.excerpt,
+        "content": post.content,
+        "cover_image": post.cover_image,
+        "read_time": post.read_time,
+        "is_published": post.is_published,
+        "is_featured": post.is_featured,
+        "is_locked": _is_locked(post),
+        "views": post.views,
+        "author": post.author,
+        "created_at": post.created_at,
+        "published_at": post.published_at,
+        "drop_date": post.drop_date,
+    }
+
+
 # ─── Public routes ───────────────────────────────────────────────────────────
 @router.get("/", response_model=List[PostResponse])
 async def get_posts(
@@ -129,6 +151,48 @@ async def get_featured_posts(
     return [_serialize(p) for p in posts]
 
 
+# ─── Admin read routes (declared before /{slug} so they match cleanly) ───────
+@router.get("/admin/list", response_model=List[PostResponse])
+async def admin_list_posts(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    """Every post — drafts, scheduled, and published — newest first (admin only)."""
+    query = select(Post).options(
+        selectinload(Post.author),
+        selectinload(Post.tags)
+    ).order_by(Post.created_at.desc())
+
+    result = await db.execute(query)
+    posts = result.scalars().all()
+
+    return [_admin_serialize(p) for p in posts]
+
+
+@router.get("/admin/get/{slug}", response_model=PostResponse)
+async def admin_get_post(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    """Fetch one post by slug with full content, any status (admin edit view)."""
+    result = await db.execute(
+        select(Post).where(Post.slug == slug).options(
+            selectinload(Post.author),
+            selectinload(Post.tags)
+        )
+    )
+    post = result.scalar_one_or_none()
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found"
+        )
+
+    return _admin_serialize(post)
+
+
 @router.get("/{slug}", response_model=PostResponse)
 async def get_post(slug: str, db: AsyncSession = Depends(get_db)):
     """Get a single post by slug. A locked post returns its teaser, never the body."""
@@ -158,6 +222,23 @@ async def get_post(slug: str, db: AsyncSession = Depends(get_db)):
 
 
 # ─── Admin routes ────────────────────────────────────────────────────────────
+@router.get("/admin/all", response_model=List[PostResponse])
+async def list_all_posts(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    """Every post — drafts, scheduled, and published — for the admin manage view.
+    Returns full content (the admin is the author/editor). Two path segments
+    (/admin/all) so it never collides with the public /{slug} route."""
+    query = select(Post).options(
+        selectinload(Post.author),
+        selectinload(Post.tags)
+    ).order_by(Post.created_at.desc())
+    result = await db.execute(query)
+    posts = result.scalars().all()
+    return posts
+
+
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 async def create_post(
     post_data: PostCreate,

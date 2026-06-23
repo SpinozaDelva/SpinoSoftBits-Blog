@@ -1,7 +1,7 @@
-// src/pages/Admin.jsx - Write & publish posts
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPost, publishPost } from '../api/posts';
+// src/pages/Admin.jsx - Write, edit & publish posts (also handles /edit/:slug)
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createPost, updatePost, publishPost, getAllPostsAdmin } from '../api/posts';
 
 // Smallest selectable drop time = now, in the local format datetime-local wants.
 const nowLocalInput = () => {
@@ -10,20 +10,76 @@ const nowLocalInput = () => {
   return d.toISOString().slice(0, 16);
 };
 
+// UTC ISO -> local datetime-local string (for prefilling when editing).
+const isoToLocalInput = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
 function Admin() {
   const navigate = useNavigate();
+  const { slug } = useParams();       // present => edit mode
+  const isEdit = Boolean(slug);
+
   const [title, setTitle] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
+  const [isPublished, setIsPublished] = useState(false);
+  const [loadingPost, setLoadingPost] = useState(isEdit);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Load the post when editing.
+  useEffect(() => {
+    if (!isEdit) return;
+    let active = true;
+    (async () => {
+      try {
+        const all = await getAllPostsAdmin();
+        const post = (all || []).find((p) => p.slug === slug);
+        if (!active) return;
+        if (!post) {
+          setError('Post not found.');
+          return;
+        }
+        setTitle(post.title || '');
+        setExcerpt(post.excerpt || '');
+        setContent(post.content || '');
+        setTags((post.tags || []).map((t) => t.name).join(', '));
+        setIsFeatured(Boolean(post.is_featured));
+        setDropDate(isoToLocalInput(post.drop_date));
+        setIsPublished(Boolean(post.is_published));
+      } catch (err) {
+        if (active) setError('Could not load the post. Are you logged in as admin?');
+        console.error(err);
+      } finally {
+        if (active) setLoadingPost(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [isEdit, slug]);
 
   const canSaveDraft = title.trim() && content.trim();
   const canPublish =
     title.trim() && excerpt.trim() && content.trim() && tags.trim();
+
+  const buildPayload = () => ({
+    title,
+    excerpt,
+    content,
+    is_featured: isFeatured,
+    // datetime-local is local & naive; convert to UTC ISO. Empty = no drop.
+    drop_date: dropDate ? new Date(dropDate).toISOString() : null,
+    tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+  });
 
   const handleSave = async (publish) => {
     setError(null);
@@ -39,22 +95,15 @@ function Admin() {
 
     setSaving(true);
     try {
-      const post = await createPost({
-        title,
-        excerpt,
-        content,
-        is_featured: isFeatured,
-        // datetime-local is local & naive; convert to UTC ISO so the server
-        // compares it correctly. Empty = no drop date = live immediately.
-        drop_date: dropDate ? new Date(dropDate).toISOString() : null,
-        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-      });
-
-      if (publish) {
-        await publishPost(post.slug);
+      if (isEdit) {
+        const body = buildPayload();
+        if (publish) body.is_published = true;
+        await updatePost(slug, body);
+      } else {
+        const post = await createPost(buildPayload());
+        if (publish) await publishPost(post.slug);
       }
-
-      navigate('/');
+      navigate('/manage');
     } catch (err) {
       setError('Could not save. Make sure you are logged in as admin.');
       console.error(err);
@@ -63,12 +112,22 @@ function Admin() {
     }
   };
 
+  if (loadingPost) {
+    return (
+      <div className="max-w-3xl mx-auto px-6 py-24">
+        <p className="font-mono text-sm text-muted">Loading…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
       <p className="font-mono text-xs text-glow tracking-widest uppercase mb-6">
-        // new entry
+        // {isEdit ? 'edit entry' : 'new entry'}
       </p>
-      <h1 className="font-display text-3xl font-bold mb-10">Write a post</h1>
+      <h1 className="font-display text-3xl font-bold mb-10">
+        {isEdit ? 'Edit post' : 'Write a post'}
+      </h1>
 
       <div className="space-y-6">
         <div>
@@ -130,7 +189,7 @@ function Admin() {
           />
           <p className="font-mono text-xs text-muted mt-2">
             {dropDate
-              ? 'On Publish, this goes live now as a locked teaser (title + blurred excerpt) and unlocks fully at the time above.'
+              ? 'Goes live as a locked teaser (title + blurred excerpt) and unlocks fully at the time above.'
               : 'Leave empty to publish the full post immediately.'}
           </p>
           {dropDate && (
@@ -156,20 +215,50 @@ function Admin() {
 
         {error && <p className="font-mono text-xs text-glow">{error}</p>}
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-wrap gap-3 pt-2">
+          {isEdit ? (
+            <>
+              <button
+                onClick={() => handleSave(false)}
+                disabled={saving || !canSaveDraft}
+                className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+              {!isPublished && (
+                <button
+                  onClick={() => handleSave(true)}
+                  disabled={saving || !canPublish}
+                  className="rounded-lg border border-border px-6 py-3 font-display font-medium text-fg transition-colors hover:border-glow/40 disabled:opacity-40"
+                >
+                  Save & publish
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleSave(true)}
+                disabled={saving || !canPublish}
+                className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {saving ? 'Saving…' : dropDate ? 'Schedule & publish' : 'Publish'}
+              </button>
+              <button
+                onClick={() => handleSave(false)}
+                disabled={saving || !canSaveDraft}
+                className="rounded-lg border border-border px-6 py-3 font-display font-medium text-fg transition-colors hover:border-glow/40 disabled:opacity-40"
+              >
+                Save as draft
+              </button>
+            </>
+          )}
           <button
-            onClick={() => handleSave(true)}
-            disabled={saving || !canPublish}
-            className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            type="button"
+            onClick={() => navigate('/manage')}
+            className="rounded-lg px-6 py-3 font-mono text-sm text-muted hover:text-glow transition-colors"
           >
-            {saving ? 'Saving…' : dropDate ? 'Schedule & publish' : 'Publish'}
-          </button>
-          <button
-            onClick={() => handleSave(false)}
-            disabled={saving || !canSaveDraft}
-            className="rounded-lg border border-border px-6 py-3 font-display font-medium text-fg transition-colors hover:border-glow/40 disabled:opacity-40"
-          >
-            Save as draft
+            Cancel
           </button>
         </div>
       </div>

@@ -26,6 +26,9 @@ function Navbar() {
               <Link to="/admin" className="text-muted hover:text-glow transition-colors">
                 Write
               </Link>
+              <Link to="/manage" className="text-muted hover:text-glow transition-colors">
+                Manage
+              </Link>
               <button onClick={handleLogout} className="text-muted hover:text-glow transition-colors uppercase tracking-widest">
                 Log out
               </button>
