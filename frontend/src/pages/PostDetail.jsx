@@ -1,28 +1,63 @@
 // src/pages/PostDetail.jsx - Full article view
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getPost } from '../api/posts';
+
+// Seconds to show the "not found" message before bouncing to the blog home.
+const REDIRECT_SECONDS = 4;
 
 function PostDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [redirectIn, setRedirectIn] = useState(REDIRECT_SECONDS);
 
+  // Fetch the post by slug. A 404 (or any failure) drops us into the
+  // "not found" state below.
   useEffect(() => {
+    let active = true;
+
     const fetchPost = async () => {
+      setLoading(true);
+      setError(null);
+      setRedirectIn(REDIRECT_SECONDS);
       try {
         const data = await getPost(slug);
-        setPost(data);
+        if (active) setPost(data);
       } catch (err) {
-        setError('Post not found.');
+        if (active) {
+          setError('Post not found.');
+          setPost(null);
+        }
         console.error(err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
+
     fetchPost();
+    return () => {
+      active = false;
+    };
   }, [slug]);
+
+  // When a post can't be loaded, count down and send the visitor to the blog home.
+  const notFound = !loading && (error || !post);
+
+  useEffect(() => {
+    if (!notFound) return;
+
+    if (redirectIn <= 0) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    const t = setTimeout(() => setRedirectIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [notFound, redirectIn, navigate]);
 
   if (loading) {
     return (
@@ -32,12 +67,18 @@ function PostDetail() {
     );
   }
 
-  if (error || !post) {
+  if (notFound) {
     return (
       <div className="max-w-3xl mx-auto px-6 py-24">
-        <p className="font-mono text-sm text-glow mb-6">{error}</p>
-        <Link to="/" className="font-mono text-sm text-muted hover:text-glow transition-colors">
-          ← back to writing
+        <p className="font-mono text-sm text-glow mb-3">Post not found.</p>
+        <p className="font-mono text-sm text-muted mb-8">
+          Taking you back to the blog in {Math.max(redirectIn, 0)}s…
+        </p>
+        <Link
+          to="/"
+          className="font-mono text-sm text-muted hover:text-glow transition-colors"
+        >
+          ← back to the blog now
         </Link>
       </div>
     );
