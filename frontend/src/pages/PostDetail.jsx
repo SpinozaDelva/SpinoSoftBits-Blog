@@ -288,6 +288,14 @@ function PostDetail() {
         </div>
       </div>
 
+      {post.cover_image && (
+        <img
+          src={post.cover_image}
+          alt=""
+          className="w-full rounded-xl mb-10 object-cover max-h-[420px]"
+        />
+      )}
+
       {isLocked ? (
         /* Locked teaser: blurred paragraph + drop card */
         <div className="relative">

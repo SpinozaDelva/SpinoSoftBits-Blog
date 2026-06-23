@@ -29,6 +29,7 @@ function Admin() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [coverImage, setCoverImage] = useState('');
   const [category, setCategory] = useState('tech');
   const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
   const [isPublished, setIsPublished] = useState(false);
@@ -54,6 +55,7 @@ function Admin() {
         setContent(post.content || '');
         setTags((post.tags || []).map((t) => t.name).join(', '));
         setIsFeatured(Boolean(post.is_featured));
+        setCoverImage(post.cover_image || '');
         setCategory(post.category || 'tech');
         setDropDate(isoToLocalInput(post.drop_date));
         setIsPublished(Boolean(post.is_published));
@@ -79,6 +81,7 @@ function Admin() {
     content,
     is_featured: isFeatured,
     category,
+    cover_image: coverImage.trim() || null,
     // datetime-local is local & naive; convert to UTC ISO. Empty = no drop.
     drop_date: dropDate ? new Date(dropDate).toISOString() : null,
     tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -153,6 +156,29 @@ function Admin() {
             className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors"
             placeholder="One-line summary (this is the teaser readers see while a post is locked)"
           />
+        </div>
+
+        <div>
+          <label className="block font-mono text-xs text-muted mb-2">
+            cover image URL (optional)
+          </label>
+          <input
+            type="url"
+            value={coverImage}
+            onChange={(e) => setCoverImage(e.target.value)}
+            className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg font-mono text-sm outline-none focus:border-glow/50 transition-colors"
+            placeholder="https://…/image.jpg"
+          />
+          <p className="font-mono text-xs text-muted mt-2">
+            Shown on the post and in social / email previews. Paste a hosted image URL.
+          </p>
+          {coverImage && (
+            <img
+              src={coverImage}
+              alt=""
+              className="mt-3 rounded-lg max-h-40 object-cover border border-border"
+            />
+          )}
         </div>
 
         <div>
