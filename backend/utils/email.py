@@ -13,19 +13,47 @@ SITE_URL = os.getenv("BLOG_URL", "https://blog.spinosoftbits.com").rstrip("/")
 API_URL = os.getenv("PUBLIC_API_URL", "https://spinosoftbits-blog-production.up.railway.app/api").rstrip("/")
 
 
+MAIN_SITE = os.getenv("MAIN_SITE", "https://spinosoftbits.com").rstrip("/")
+GITHUB = "https://github.com/SpinozaDelva"
+LINKEDIN = "https://www.linkedin.com/in/spinozadelva"
+TAGLINE = "Tech, poems & life — from Brooklyn."
+
+
 def _sender() -> str:
     return f"{FROM_NAME} <{FROM_EMAIL}>"
 
 
 def _shell(inner: str) -> str:
-    """Wrap content in a simple branded layout."""
+    """Wrap content in a branded, polished email layout (inline CSS for clients)."""
     return f"""
-    <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#1a202c;">
-      <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:24px;border-radius:14px 14px 0 0;">
-        <h1 style="margin:0;color:#fff;font-size:20px;">SpinoSoftBits</h1>
-      </div>
-      <div style="border:1px solid #eee;border-top:none;border-radius:0 0 14px 14px;padding:28px 24px;">
-        {inner}
+    <div style="background:#f4f5f7;padding:28px 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+      <div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.06);">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 55%,#e8b339 130%);padding:32px 28px;text-align:center;">
+          <h1 style="margin:0;color:#ffffff;font-size:24px;letter-spacing:-0.3px;font-weight:800;">
+            SpinoSoft<span style="color:#ffd86b;">Bits</span>
+          </h1>
+          <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">{TAGLINE}</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:32px 28px;color:#2b2f36;">
+          {inner}
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top:1px solid #eee;padding:22px 28px;text-align:center;background:#fafafa;">
+          <p style="margin:0 0 10px;">
+            <a href="{GITHUB}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">GitHub</a>
+            <a href="{LINKEDIN}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">LinkedIn</a>
+            <a href="{MAIN_SITE}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">Hire me</a>
+          </p>
+          <p style="margin:0;color:#9aa0a6;font-size:12px;">
+            Powered by <a href="{MAIN_SITE}" style="color:#9aa0a6;">SpinoSoftBits.com</a> · Brooklyn, NY
+          </p>
+        </div>
+
       </div>
     </div>
     """
@@ -65,23 +93,31 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
         print(f"[email] welcome send failed for {to_email}: {e}")
 
 
-def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: str) -> None:
+def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: str,
+                        cover_image: Optional[str] = None) -> None:
     """Notify subscribers about a new post. One email per recipient so
     addresses stay private. Best-effort; never raises."""
     if not resend.api_key or not to_emails:
         return
     url = f"{SITE_URL}/post/{slug}"
+    cover_html = (
+        f'<img src="{cover_image}" alt="" width="524" '
+        f'style="width:100%;max-width:524px;border-radius:10px;margin:0 0 20px;display:block;" />'
+        if cover_image else ""
+    )
     for email in to_emails:
         unsub = f"{API_URL}/newsletter/unsubscribe?email={email}"
         inner = f"""
-          <p style="font-size:13px;color:#764ba2;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">New post</p>
-          <h2 style="margin:0 0 12px;font-size:22px;">{title}</h2>
-          <p style="font-size:16px;line-height:1.6;color:#444;">{excerpt or ''}</p>
-          <p style="margin-top:22px;">
-            <a href="{url}" style="background:#667eea;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;">Read it</a>
+          {cover_html}
+          <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Fresh from the blog</p>
+          <h2 style="margin:0 0 14px;font-size:24px;line-height:1.25;color:#1a1f29;">{title}</h2>
+          <p style="font-size:16px;line-height:1.7;color:#4a5160;margin:0 0 8px;">{excerpt or 'A new piece just went live — give it a read.'}</p>
+          <p style="margin:26px 0 6px;">
+            <a href="{url}" style="background:#667eea;color:#fff;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Read the full post →</a>
           </p>
-          <p style="font-size:12px;color:#888;margin-top:28px;">
-            <a href="{unsub}" style="color:#888;">Unsubscribe</a>
+          <p style="font-size:13px;color:#9aa0a6;margin-top:22px;">
+            You're getting this because you subscribed at SpinoSoftBits.
+            <a href="{unsub}" style="color:#9aa0a6;">Unsubscribe</a>.
           </p>
         """
         try:

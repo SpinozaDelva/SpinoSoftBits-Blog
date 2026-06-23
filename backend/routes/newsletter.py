@@ -146,6 +146,6 @@ async def send_post(
     recipients = await _recipients(db, data.emails)
     if recipients:
         background.add_task(
-            send_new_post_email, recipients, post.title, post.excerpt or "", post.slug
+            send_new_post_email, recipients, post.title, post.excerpt or "", post.slug, post.cover_image
         )
     return {"sent": len(recipients)}

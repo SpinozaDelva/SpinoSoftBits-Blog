@@ -375,7 +375,7 @@ async def update_post(
         emails = await _active_subscriber_emails(db)
         if emails:
             background.add_task(
-                send_new_post_email, emails, post.title, post.excerpt or "", post.slug
+                send_new_post_email, emails, post.title, post.excerpt or "", post.slug, post.cover_image
             )
 
     return _serialize(post)
@@ -440,7 +440,7 @@ async def publish_post(
         emails = await _active_subscriber_emails(db)
         if emails:
             background.add_task(
-                send_new_post_email, emails, post.title, post.excerpt or "", post.slug
+                send_new_post_email, emails, post.title, post.excerpt or "", post.slug, post.cover_image
             )
 
     return _serialize(post)
