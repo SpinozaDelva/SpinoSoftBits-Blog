@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from config import settings
 from database import engine, Base
 from models import User, Post, Tag, Subscriber  # noqa: F401  (imported so tables register)
-
+from routes import auth, posts, newsletter
 # Import routes
 from routes import auth, posts
 
@@ -43,6 +43,7 @@ app.add_middleware(
 # Include routes
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(posts.router, prefix="/api/posts", tags=["Posts"])
+app.include_router(newsletter.router, prefix="/api/newsletter", tags=["Newsletter"])
 
 
 # Health check (root)

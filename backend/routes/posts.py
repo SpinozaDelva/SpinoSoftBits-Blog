@@ -1,5 +1,5 @@
 # routes/posts.py - Blog Post Routes
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -8,9 +8,10 @@ from datetime import datetime, timezone
 import re
 
 from database import get_db
-from models import Post, Tag, User
+from models import Post, Tag, User, Subscriber
 from schemas.schemas import PostCreate, PostUpdate, PostResponse
 from utils.auth import get_current_user, get_current_admin
+from utils.email import send_new_post_email
 
 router = APIRouter()
 
@@ -84,6 +85,14 @@ def _serialize(post) -> dict:
         "published_at": post.published_at,
         "drop_date": post.drop_date,
     }
+
+
+async def _active_subscriber_emails(db: AsyncSession) -> List[str]:
+    """Email addresses of everyone still subscribed."""
+    result = await db.execute(
+        select(Subscriber.email).where(Subscriber.is_active == True)
+    )
+    return list(result.scalars().all())
 
 
 def _admin_serialize(post) -> dict:
@@ -301,6 +310,7 @@ async def create_post(
 async def update_post(
     slug: str,
     post_data: PostUpdate,
+    background: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
@@ -313,6 +323,8 @@ async def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found"
         )
+
+    was_published = post.is_published  # to detect a draft → live transition
 
     # Update fields
     if post_data.title is not None:
@@ -347,6 +359,14 @@ async def update_post(
     )
     post = result.scalar_one()
 
+    # If this update just made a readable post go live, email subscribers once.
+    if (not was_published) and post.is_published and not _is_locked(post):
+        emails = await _active_subscriber_emails(db)
+        if emails:
+            background.add_task(
+                send_new_post_email, emails, post.title, post.excerpt or "", post.slug
+            )
+
     return _serialize(post)
 
 
@@ -373,6 +393,7 @@ async def delete_post(
 @router.post("/{slug}/publish", response_model=PostResponse)
 async def publish_post(
     slug: str,
+    background: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
@@ -386,8 +407,10 @@ async def publish_post(
             detail="Post not found"
         )
 
+    was_published = post.is_published  # avoid re-notifying on re-publish
     post.is_published = True
-    post.published_at = datetime.utcnow()
+    if not post.published_at:
+        post.published_at = datetime.utcnow()
 
     await db.commit()
 
@@ -399,5 +422,14 @@ async def publish_post(
         )
     )
     post = result.scalar_one()
+
+    # Email subscribers once — only if newly published and readable now
+    # (a still-locked scheduled post won't notify until it's actually live).
+    if (not was_published) and not _is_locked(post):
+        emails = await _active_subscriber_emails(db)
+        if emails:
+            background.add_task(
+                send_new_post_email, emails, post.title, post.excerpt or "", post.slug
+            )
 
     return _serialize(post)

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link} from 'react-router-dom';
 import { getPosts } from '../api/posts';
+import SubscribeForm from '../components/SubscribeForm';
 
 function Home() {
   const [posts, setPosts] = useState([]);
@@ -104,5 +105,8 @@ function Home() {
     </div>
   );
 }
+<div className="max-w-3xl mx-auto px-6 pb-20">
+  <SubscribeForm />
+</div>
 
 export default Home;
