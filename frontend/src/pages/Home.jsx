@@ -1,6 +1,6 @@
 // src/pages/Home.jsx - Blog home page
 import { useState, useEffect } from 'react';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getPosts } from '../api/posts';
 import SubscribeForm from '../components/SubscribeForm';
 
@@ -101,12 +101,14 @@ function Home() {
             </Link>
           ))}
         </div>
+
+        {/* Newsletter signup */}
+        <div className="mt-16">
+          <SubscribeForm />
+        </div>
       </main>
     </div>
   );
 }
-<div className="max-w-3xl mx-auto px-6 pb-20">
-  <SubscribeForm />
-</div>
 
 export default Home;
