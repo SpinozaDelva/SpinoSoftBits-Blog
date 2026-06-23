@@ -208,13 +208,13 @@ function Home() {
           </p>
         )}
 
-        <div className="mt-16">
-          <WorkCTA />
-        </div>
+       <div className="mt-16">
+  <SubscribeForm />
+</div>
 
-        <div className="mt-8">
-          <SubscribeForm />
-        </div>
+<div className="mt-10">
+  <WorkCTA />
+</div>
       </main>
     </div>
   );
