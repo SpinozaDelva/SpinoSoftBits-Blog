@@ -4,6 +4,14 @@ from typing import Optional, List
 from datetime import datetime
 
 # ============ User Schemas ============
+# ============ Contact / Inquiry Schemas ============
+class InquiryCreate(BaseModel):
+    name: str
+    email: EmailStr
+    project_type: Optional[str] = None
+    budget: Optional[str] = None
+    message: str
+
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
