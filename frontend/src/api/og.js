@@ -3,15 +3,16 @@
 // Lives at frontend/api/og.js. Every /post/:slug request is rewritten here
 // (see vercel.json); real visitors still get the full React app, and link
 // scrapers (Slack, X, LinkedIn, iMessage, Facebook) get correct preview tags.
-/* eslint-env node */
+
 
 const API_BASE =
+  // eslint-disable-next-line no-undef
   process.env.BLOG_API_URL ||
   'https://spinosoftbits-blog-production.up.railway.app/api';
 
 // Fallback preview image for posts without a cover.
 // Drop a 1200x630 image at frontend/public/og-default.png (or set an absolute URL).
-const DEFAULT_IMAGE = '/og-default.png';
+const DEFAULT_IMAGE = '/og-default.jpg';
 
 const esc = (s = '') =>
   String(s)
@@ -30,6 +31,7 @@ export default async function handler(req, res) {
   try {
     const shell = await fetch(`${base}/index.html`);
     html = await shell.text();
+  // eslint-disable-next-line no-unused-vars
   } catch (e) {
     res.status(502).send('Unable to load page shell.');
     return;
@@ -54,6 +56,7 @@ export default async function handler(req, res) {
         url: `${base}/post/${slug}`,
       };
     }
+  // eslint-disable-next-line no-unused-vars
   } catch (e) {
     /* fall back to defaults */
   }
