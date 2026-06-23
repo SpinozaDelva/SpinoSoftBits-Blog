@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from config import settings
 from database import engine, Base
-from models import User, Post, Tag, Subscriber
+from models import User, Post, Tag, Subscriber  # noqa: F401  (imported so tables register)
 
 # Import routes
 from routes import auth, posts
+
 
 # Create database tables on startup
 @asynccontextmanager
@@ -19,20 +20,21 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     print("👋 Database connection closed")
 
+
 # Initialize FastAPI app
 app = FastAPI(
-    title="SpinozaSoftBits Blog API",
+    title="SpinoSoftBits Blog API",
     description="A modern blog API built with Python FastAPI",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,19 +44,18 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(posts.router, prefix="/api/posts", tags=["Posts"])
 
-# Health check
+
+# Health check (root)
 @app.get("/")
 async def root():
     return {
         "status": "healthy",
-        "message": "SpinozaSoftBits Blog API",
-        "docs": "/docs"
+        "message": "SpinoSoftBits Blog API",
+        "docs": "/docs",
     }
 
-# added a POST Endpoint check. 
-@app.route("/api/health", methods=["POST"])
+
+# Lightweight health endpoint for uptime checks / Railway
+@app.get("/api/health")
 async def health_check():
-    return {
-        "status ": "OK"
-    }
-
+    return {"status": "OK"}
