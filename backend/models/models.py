@@ -74,6 +74,8 @@ class Subscriber(Base):
     name = Column(String(255))
     interests = Column(String(500))
     is_active = Column(Boolean, default=True)
+    # Set on signup; cleared once the email is confirmed (double opt-in).
+    confirm_token = Column(String(64), nullable=True)
     subscribed_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -103,4 +105,17 @@ class Unlock(Base):
     email = Column(String(255), index=True)
     token = Column(String(64), unique=True, index=True, nullable=False)
     stripe_session_id = Column(String(255), unique=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Inquiry(Base):
+    """A 'work with me' lead from the contact form."""
+    __tablename__ = "inquiries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(120), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
+    project_type = Column(String(80))
+    budget = Column(String(80))
+    message = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -69,7 +69,7 @@ function SubscribeForm() {
             className="rounded-xl px-5 py-4 font-mono text-sm"
             style={{ background: 'rgba(110,231,183,0.14)', border: '1px solid rgba(110,231,183,0.4)', color: '#6EE7B7' }}
           >
-            🎉 You're in — check your inbox for a welcome note.
+            📬 Almost there — check your inbox and click the confirmation link to finish subscribing.
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row gap-3">

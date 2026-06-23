@@ -87,6 +87,11 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
         Building something yourself and want a hand? Just hit reply — these come straight to me.
       </p>
 
+      <p style="font-size:15px;line-height:1.6;color:#3a4150;background:#f4f5ff;border-radius:10px;padding:14px 16px;margin:0 0 22px;">
+        💡 <strong>One small favor:</strong> add <strong>{FROM_EMAIL}</strong> to your contacts so my
+        emails land in your main inbox instead of getting lost in a Promotions tab.
+      </p>
+
       <p style="margin:0 0 6px;">
         <a href="{SITE_URL}" style="background:#667eea;color:#fff;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Start reading →</a>
       </p>
@@ -241,3 +246,66 @@ def send_custom_email(to_email: str, subject: str, html: str) -> None:
         })
     except Exception as e:  # noqa: BLE001
         print(f"[email] custom send failed for {to_email}: {e}")
+
+
+def send_confirm_email(to_email: str, name: Optional[str], token: str) -> None:
+    """Double opt-in: ask the subscriber to confirm their email. Best-effort."""
+    if not resend.api_key or not to_email:
+        return
+    greeting = f"Hey {name}," if name else "Hey there,"
+    confirm_url = f"{API_URL}/newsletter/confirm?token={token}"
+    inner = f"""
+      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">One quick step</p>
+      <h2 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1a1f29;">Confirm your subscription</h2>
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">{greeting}</p>
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 22px;">
+        Thanks for signing up for SpinoSoftBits. One click and you're in — I just need to
+        confirm it's really your inbox.
+      </p>
+      <p style="margin:0 0 18px;">
+        <a href="{confirm_url}" style="background:#667eea;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Confirm my email →</a>
+      </p>
+      <p style="font-size:13px;color:#9aa0a6;margin-top:18px;">
+        Didn't sign up? You can ignore this — nothing happens unless you confirm.
+      </p>
+    """
+    try:
+        resend.Emails.send({
+            "from": _sender(),
+            "to": [to_email],
+            "subject": "Confirm your subscription — SpinoSoftBits",
+            "html": _shell(inner),
+        })
+    except Exception as e:  # noqa: BLE001
+        print(f"[email] confirm send failed for {to_email}: {e}")
+
+
+def send_inquiry_email(name, email, message, project_type=None, budget=None) -> None:
+    """Notify the admin of a new 'work with me' inquiry. Reply-to is the lead's
+    address, so a reply goes straight to them. Best-effort; never raises."""
+    if not resend.api_key:
+        return
+    extra = ""
+    if project_type:
+        extra += f'<p style="font-size:15px;margin:0 0 6px;"><strong>Project:</strong> {_esc_html(project_type)}</p>'
+    if budget:
+        extra += f'<p style="font-size:15px;margin:0 0 6px;"><strong>Budget:</strong> {_esc_html(budget)}</p>'
+    inner = f"""
+      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">New inquiry</p>
+      <h2 style="margin:0 0 14px;font-size:22px;color:#1a1f29;">{_esc_html(name)} wants to work with you</h2>
+      <p style="font-size:15px;margin:0 0 6px;"><strong>Email:</strong> {_esc_html(email)}</p>
+      {extra}
+      <p style="font-size:15px;margin:16px 0 6px;"><strong>Message:</strong></p>
+      {_paragraphs(message)}
+      <p style="font-size:13px;color:#9aa0a6;margin-top:20px;">Reply to this email to respond directly.</p>
+    """
+    try:
+        resend.Emails.send({
+            "from": _sender(),
+            "to": [FROM_EMAIL],
+            "reply_to": email,
+            "subject": f"New inquiry from {name}",
+            "html": _shell(inner),
+        })
+    except Exception as e:  # noqa: BLE001
+        print(f"[email] inquiry send failed: {e}")
