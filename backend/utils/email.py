@@ -64,22 +64,35 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
     if not resend.api_key:
         print("[email] RESEND_API_KEY missing — skipping welcome email")
         return
-    greeting = f"Hi {name}," if name else "Hi there,"
+    greeting = f"Hey {name}," if name else "Hey there,"
     unsub = f"{API_URL}/newsletter/unsubscribe?email={to_email}"
     inner = f"""
-      <p style="font-size:16px;">{greeting}</p>
-      <p style="font-size:16px;line-height:1.6;">
-        Thanks for subscribing. You'll get new posts on tech, poems, and
-        health &amp; lifestyle — straight to your inbox, no spam.
+      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Welcome aboard</p>
+      <h2 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1a1f29;">You're in. 🎉</h2>
+
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">
+        {greeting}
       </p>
-      <p style="font-size:16px;line-height:1.6;">
-        Building something and want a hand? Just reply to this email.
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">
+        I'm <strong>Spinoza Delva</strong> — a full-stack engineer in Brooklyn and the person
+        behind SpinoSoftBits. Thanks for subscribing; it genuinely means a lot.
       </p>
-      <p style="margin-top:24px;">
-        <a href="{SITE_URL}" style="background:#667eea;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;">Read the blog</a>
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">
+        Here's what to expect from me: I'll email you when I publish something new —
+        <strong>tech write-ups, poems, and notes on health &amp; lifestyle</strong> — plus the
+        occasional update on what I'm building. No spam, no daily noise. Just the good stuff,
+        when there's good stuff.
       </p>
-      <p style="font-size:12px;color:#888;margin-top:28px;">
-        Don't want these? <a href="{unsub}" style="color:#888;">Unsubscribe</a>.
+      <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 22px;">
+        Building something yourself and want a hand? Just hit reply — these come straight to me.
+      </p>
+
+      <p style="margin:0 0 6px;">
+        <a href="{SITE_URL}" style="background:#667eea;color:#fff;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Start reading →</a>
+      </p>
+
+      <p style="font-size:13px;color:#9aa0a6;margin-top:24px;">
+        Changed your mind? No hard feelings — <a href="{unsub}" style="color:#9aa0a6;">unsubscribe anytime</a>.
       </p>
     """
     try:
