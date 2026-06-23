@@ -3,6 +3,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPost, publishPost } from '../api/posts';
 
+// Smallest selectable drop time = now, in the local format datetime-local wants.
+const nowLocalInput = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
 function Admin() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
@@ -10,6 +17,7 @@ function Admin() {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
+  const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -36,6 +44,9 @@ function Admin() {
         excerpt,
         content,
         is_featured: isFeatured,
+        // datetime-local is local & naive; convert to UTC ISO so the server
+        // compares it correctly. Empty = no drop date = live immediately.
+        drop_date: dropDate ? new Date(dropDate).toISOString() : null,
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       });
 
@@ -78,7 +89,7 @@ function Admin() {
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors"
-            placeholder="One-line summary (optional)"
+            placeholder="One-line summary (this is the teaser readers see while a post is locked)"
           />
         </div>
 
@@ -106,6 +117,33 @@ function Admin() {
           />
         </div>
 
+        <div>
+          <label className="block font-mono text-xs text-muted mb-2">
+            schedule drop (optional)
+          </label>
+          <input
+            type="datetime-local"
+            value={dropDate}
+            min={nowLocalInput()}
+            onChange={(e) => setDropDate(e.target.value)}
+            className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg font-mono text-sm outline-none focus:border-glow/50 transition-colors"
+          />
+          <p className="font-mono text-xs text-muted mt-2">
+            {dropDate
+              ? 'On Publish, this goes live now as a locked teaser (title + blurred excerpt) and unlocks fully at the time above.'
+              : 'Leave empty to publish the full post immediately.'}
+          </p>
+          {dropDate && (
+            <button
+              type="button"
+              onClick={() => setDropDate('')}
+              className="mt-2 font-mono text-xs text-glow hover:opacity-80 transition-opacity"
+            >
+              clear schedule
+            </button>
+          )}
+        </div>
+
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -124,7 +162,7 @@ function Admin() {
             disabled={saving || !canPublish}
             className="rounded-lg bg-glow px-6 py-3 font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            {saving ? 'Saving…' : 'Publish'}
+            {saving ? 'Saving…' : dropDate ? 'Schedule & publish' : 'Publish'}
           </button>
           <button
             onClick={() => handleSave(false)}
