@@ -24,8 +24,10 @@ export function paletteFor(post, catMap) {
 
 function PostCard({ post, catMap, large = false }) {
   const pc = paletteFor(post, catMap);
+  // Soft vignette: image is fully visible in the middle and fades to nothing
+  // before reaching any edge, so it melts into the card (no "stamped" look).
   const fade =
-    'radial-gradient(120% 90% at 70% 50%, #000 0%, rgba(0,0,0,0.5) 45%, transparent 78%)';
+    'radial-gradient(125% 115% at 68% 42%, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.32) 55%, rgba(0,0,0,0.08) 72%, transparent 84%)';
   return (
     <Link to={`/post/${post.slug}`} className="block">
       <article
@@ -43,7 +45,8 @@ function PostCard({ post, catMap, large = false }) {
               backgroundImage: `url(${post.cover_image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: 0.22,
+              backgroundRepeat: 'no-repeat',
+              opacity: 0.2,
               WebkitMaskImage: fade,
               maskImage: fade,
             }}
