@@ -1,128 +1,110 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import client from '../api/client';
+// src/pages/Archive.jsx - All posts: live search, category dropdown, paging
+import { useState, useEffect, useRef } from 'react';
 import { searchPosts } from '../api/search';
-
-const fmtDate = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+import useCategories from '../hooks/useCategories';
+import PostCard from '../components/PostCard';
 
 function Archive() {
   const [q, setQ] = useState('');
-  const [debouncedQ, setDebouncedQ] = useState('');
   const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
-  const [cats, setCats] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { categories } = useCategories();
 
-  // categories for the dropdown
+  // Debounce the typed query so we search as you type without hammering the API.
+  const [debouncedQ, setDebouncedQ] = useState('');
+  const timer = useRef(null);
   useEffect(() => {
-    let on = true;
-    client.get('/categories')
-      .then((r) => { if (on) setCats(Array.isArray(r.data) ? r.data : []); })
-      .catch(() => {});
-    return () => { on = false; };
-  }, []);
-
-  // debounce the search text -> live search
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedQ(q.trim()); setPage(1); }, 300);
-    return () => clearTimeout(t);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => { setDebouncedQ(q.trim()); setPage(1); }, 300);
+    return () => clearTimeout(timer.current);
   }, [q]);
 
-  // fetch results whenever query / category / page changes
+  // Reset to page 1 whenever the category changes.
+  useEffect(() => { setPage(1); }, [category]);
+
   useEffect(() => {
     let on = true;
     setLoading(true);
     setError(null);
-    searchPosts({ q: debouncedQ, category, page })
+    searchPosts({ q: debouncedQ, page, category })
       .then((d) => { if (on) setData(d); })
       .catch((e) => { console.error(e); if (on) setError('Could not load posts.'); })
       .finally(() => { if (on) setLoading(false); });
     return () => { on = false; };
-  }, [debouncedQ, category, page]);
+  }, [debouncedQ, page, category]);
 
   const pages = data?.pages || 1;
   const items = data?.items || [];
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-16">
-      <p className="font-mono text-xs text-glow tracking-widest uppercase mb-2">{'// archive'}</p>
-      <h1 className="font-display text-3xl font-bold mb-8">All posts</h1>
+    <div className="min-h-screen">
+      <style>{`
+        .feed-card { transition: transform .3s ease, box-shadow .3s ease; box-shadow: 0 4px 14px -8px rgba(0,0,0,0.4); }
+        .feed-card:hover { transform: translateY(-5px) scale(1.012); box-shadow: 0 26px 52px -18px var(--accent); }
+      `}</style>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-10">
-        <input
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search titles, excerpts, content..."
-          className="flex-1 rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors"
-        />
-        <select
-          value={category}
-          onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-          className="rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors sm:w-48"
-        >
-          <option value="all">All categories</option>
-          {cats.map((c) => (
-            <option key={c.slug} value={c.slug}>{c.name}</option>
-          ))}
-        </select>
-      </div>
+      <div className="max-w-3xl mx-auto px-6 py-16">
+        <p className="font-mono text-xs text-glow tracking-widest uppercase mb-2">{'// archive'}</p>
+        <h1 className="font-display text-3xl font-bold mb-8">All posts</h1>
 
-      {loading && <p className="font-mono text-sm text-muted">Loading...</p>}
-      {error && <p className="font-mono text-sm text-red-300">{error}</p>}
+        <div className="flex flex-col sm:flex-row gap-3 mb-10">
+          <input
+            type="text"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search titles, excerpts, content..."
+            className="flex-1 rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors"
+          />
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50 transition-colors"
+          >
+            <option value="all">All categories</option>
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>{c.name}</option>
+            ))}
+          </select>
+        </div>
 
-      {!loading && !error && (
-        <>
-          {items.length === 0 ? (
-            <p className="font-mono text-sm text-muted">
-              {debouncedQ ? `No posts match "${debouncedQ}".` : 'No posts here yet.'}
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {items.map((p) => (
-                <Link
-                  key={p.id}
-                  to={`/post/${p.slug}`}
-                  className="block rounded-xl border border-border bg-ink-raised px-5 py-4 hover:border-glow/40 transition-colors"
-                  style={{ borderLeft: `3px solid ${p.category_color}` }}
-                >
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <h3 className="font-display font-semibold text-fg">{p.title}</h3>
-                    <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
-                      <span style={{ color: p.category_color }}>{p.category}</span>
-                      {p.read_time ? ` / ${p.read_time} min` : ''}
-                      {' / '}{fmtDate(p.created_at)}
-                      {p.is_premium ? ' / premium' : ''}
-                    </span>
-                  </div>
-                  {p.excerpt && <p className="text-sm text-muted leading-relaxed mt-2 line-clamp-2">{p.excerpt}</p>}
-                </Link>
-              ))}
+        {loading && <p className="font-mono text-sm text-muted">Loading...</p>}
+        {error && <p className="font-mono text-sm text-red-300">{error}</p>}
+
+        {!loading && !error && (
+          <>
+            {items.length === 0 ? (
+              <p className="font-mono text-sm text-muted">
+                {debouncedQ ? `No posts match "${debouncedQ}".` : 'No posts yet.'}
+              </p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {items.map((post) => <PostCard key={post.id} post={post} />)}
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-4 mt-12 font-mono text-xs">
+              <button
+                onClick={() => setPage((n) => Math.max(1, n - 1))}
+                disabled={page <= 1}
+                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
+              >
+                Prev
+              </button>
+              <span className="text-muted">Page {page} of {pages}</span>
+              <button
+                onClick={() => setPage((n) => Math.min(pages, n + 1))}
+                disabled={page >= pages}
+                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
+              >
+                Next
+              </button>
             </div>
-          )}
-
-          <div className="flex items-center justify-center gap-5 mt-10 font-mono text-xs">
-            <button
-              onClick={() => setPage((n) => Math.max(1, n - 1))}
-              disabled={page <= 1}
-              className="rounded-lg border border-border px-3 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
-            >
-              {'<'}
-            </button>
-            <span className="text-muted">Page {page} of {pages}</span>
-            <button
-              onClick={() => setPage((n) => Math.min(pages, n + 1))}
-              disabled={page >= pages}
-              className="rounded-lg border border-border px-3 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
-            >
-              {'>'}
-            </button>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

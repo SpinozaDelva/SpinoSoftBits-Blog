@@ -3,6 +3,7 @@ import math
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
+from sqlalchemy.orm import selectinload
 
 from database import get_db
 from models import Post, Category
@@ -11,8 +12,14 @@ router = APIRouter()
 
 
 def _card(post, color: str | None) -> dict:
-    """Lightweight listing card. No body content (keeps payload small and never
-    leaks premium content). Built locally so this module imports no other route."""
+    """Listing card with the fields the shared PostCard renders. No body content
+    (keeps payload small and never leaks premium content)."""
+    author = None
+    if post.author is not None:
+        author = {
+            "full_name": getattr(post.author, "full_name", None),
+            "username": getattr(post.author, "username", None),
+        }
     return {
         "id": post.id,
         "slug": post.slug,
@@ -20,9 +27,12 @@ def _card(post, color: str | None) -> dict:
         "excerpt": post.excerpt,
         "cover_image": post.cover_image,
         "category": post.category or "tech",
-        "category_color": color or "#9aa0a6",
+        "category_color": color or "#5AA9E6",
         "read_time": post.read_time,
+        "views": post.views or 0,
+        "is_featured": bool(post.is_featured),
         "is_premium": bool(post.is_premium),
+        "author": author,
         "created_at": post.created_at,
         "drop_date": post.drop_date,
     }
@@ -57,6 +67,7 @@ async def search_posts(
     offset = (page - 1) * page_size
     result = await db.execute(
         select(Post).where(*filters)
+        .options(selectinload(Post.author))
         .order_by(Post.created_at.desc())
         .offset(offset).limit(page_size)
     )

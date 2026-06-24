@@ -5,6 +5,7 @@ import { getPosts } from '../api/posts';
 import useCategories from '../hooks/useCategories';
 import SubscribeForm from '../components/SubscribeForm';
 import WorkCTA from '../components/WorkCTA';
+import PostCard from '../components/PostCard';
 
 const SERIF = '"Fraunces", Georgia, serif';
 const ALL_ACCENT = '#E8B339';
@@ -75,43 +76,6 @@ function Home() {
   const animate = visible.length > 3;
   const duration = Math.max(20, visible.length * 5);
 
-  const renderCard = (post, key) => {
-    const pc = metaFor(post.category);
-    return (
-      <Link to={`/post/${post.slug}`} key={key} className="block">
-        <article
-          className="feed-card relative overflow-hidden rounded-2xl p-6 cursor-pointer"
-          style={{
-            '--accent': pc.accent,
-            background: `linear-gradient(135deg, #ffffff 0%, ${hexToRgba(pc.accent, 0.42)} 100%)`,
-          }}
-        >
-          <div className="flex items-center gap-3 font-mono text-xs mb-3" style={{ color: 'rgba(0,0,0,0.5)' }}>
-            <span className="uppercase tracking-widest font-semibold" style={{ color: pc.accent }}>{pc.label}</span>
-            <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
-            <span>{post.read_time} min</span>
-            <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
-            <span>{post.views} views</span>
-            {post.is_featured && (
-              <span className="ml-auto rounded-full px-2 py-0.5" style={{ border: '1px solid rgba(0,0,0,0.15)', color: 'rgba(0,0,0,0.6)' }}>
-                featured
-              </span>
-            )}
-          </div>
-          <h3
-            className="font-display text-2xl font-semibold leading-snug mb-2"
-            style={pc.serif ? { color: '#1a1a1a', fontFamily: SERIF } : { color: '#1a1a1a' }}
-          >
-            {post.title}
-          </h3>
-          <p className="leading-relaxed mb-4" style={{ color: 'rgba(0,0,0,0.7)' }}>{post.excerpt}</p>
-          <div className="font-mono text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
-            {post.author.full_name || post.author.username}
-          </div>
-        </article>
-      </Link>
-    );
-  };
 
   return (
     <div className="min-h-screen">
@@ -193,12 +157,12 @@ function Home() {
         {animate ? (
           <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
             <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
-              {[...visible, ...visible].map((post, i) => renderCard(post, `${post.id}-${i}`))}
+{[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            {visible.map((post) => renderCard(post, post.id))}
+{visible.map((post) => <PostCard key={post.id} post={post} catMap={catMap} />)}
           </div>
         )}
 
