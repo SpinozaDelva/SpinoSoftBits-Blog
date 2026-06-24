@@ -10,6 +10,7 @@ import ManagePosts from './pages/ManagePosts';
 import ManageCategories from './pages/ManageCategories';
 import Newsletter from './pages/Newsletter';
 import Dashboard from './pages/Dashboard';
+import Archive from './pages/Archive';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/post/:slug" element={<PostDetail />} />
+        <Route path="/archive" element={<Archive />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/edit/:slug" element={<Admin />} />

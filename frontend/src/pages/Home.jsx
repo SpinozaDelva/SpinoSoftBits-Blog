@@ -206,7 +206,11 @@ function Home() {
           <p className="mt-4 text-center font-mono text-[11px] text-muted tracking-widest uppercase">
             ↑ scrolling · hover to pause
           </p>
-        )}
+        )}<div className="text-center mt-8">
+  <Link to="/archive" className="inline-block rounded-lg border border-border px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted hover:text-glow hover:border-glow/40 transition-colors">
+    View all posts
+  </Link>
+</div>
 
        <div className="mt-16">
   <SubscribeForm />
