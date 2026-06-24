@@ -1,5 +1,6 @@
 # utils/email.py - Resend email helpers
 import os
+import re
 from typing import Optional, List
 
 import resend
@@ -29,8 +30,8 @@ def _shell(inner: str) -> str:
     <div style="background:#f4f5f7;padding:28px 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
       <div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.06);">
 
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 55%,#e8b339 130%);padding:32px 28px;text-align:center;">
+        <!-- Header (solid color first = Outlook fallback; gradient for modern clients) -->
+        <div style="background-color:#667eea;background-image:linear-gradient(135deg,#667eea 0%,#764ba2 55%,#e8b339 130%);padding:32px 28px;text-align:center;">
           <h1 style="margin:0;color:#ffffff;font-size:24px;letter-spacing:-0.3px;font-weight:800;">
             SpinoSoft<span style="color:#ffd86b;">Bits</span>
           </h1>
@@ -112,7 +113,7 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
 
 
 def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: str,
-                        cover_image: Optional[str] = None) -> None:
+                        cover_image: Optional[str] = None, content: Optional[str] = None) -> None:
     """Notify subscribers about a new post. One email per recipient so
     addresses stay private. Best-effort; never raises."""
     if not resend.api_key or not to_emails:
@@ -123,17 +124,41 @@ def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: st
         f'style="width:100%;max-width:524px;border-radius:10px;margin:0 0 20px;display:block;" />'
         if cover_image else ""
     )
+
+    # Lead-in (excerpt) + a real preview of the writing, so there's substance
+    # before the call to action.
+    lead = excerpt.strip() if excerpt else ""
+    preview = _preview_from_content(content or "", limit=460)
+    lead_html = (
+        f'<p style="font-size:17px;line-height:1.6;color:#2b2f36;margin:0 0 16px;font-style:italic;">'
+        f'{_esc_html(lead)}</p>'
+        if lead else ""
+    )
+    if preview:
+        preview_html = "".join(
+            f'<p style="font-size:16px;line-height:1.75;color:#4a5160;margin:0 0 16px;">{_esc_html(b)}</p>'
+            for b in (preview.split("\n\n") if "\n\n" in preview else [preview])
+        )
+    elif not lead:
+        preview_html = (
+            '<p style="font-size:16px;line-height:1.75;color:#4a5160;margin:0 0 16px;">'
+            'A new piece just went live — give it a read.</p>'
+        )
+    else:
+        preview_html = ""
+
     for email in to_emails:
         unsub = f"{API_URL}/newsletter/unsubscribe?email={email}"
         inner = f"""
           {cover_html}
           <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Fresh from the blog</p>
-          <h2 style="margin:0 0 14px;font-size:24px;line-height:1.25;color:#1a1f29;">{title}</h2>
-          <p style="font-size:16px;line-height:1.7;color:#4a5160;margin:0 0 8px;">{excerpt or 'A new piece just went live — give it a read.'}</p>
-          <p style="margin:26px 0 6px;">
-            <a href="{url}" style="background:#667eea;color:#fff;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Read the full post →</a>
+          <h2 style="margin:0 0 16px;font-size:25px;line-height:1.25;color:#1a1f29;">{title}</h2>
+          {lead_html}
+          {preview_html}
+          <p style="margin:24px 0 6px;">
+            <a href="{url}" style="background:#667eea;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Read the full post →</a>
           </p>
-          <p style="font-size:13px;color:#9aa0a6;margin-top:22px;">
+          <p style="font-size:13px;color:#9aa0a6;margin-top:24px;">
             You're getting this because you subscribed at SpinoSoftBits.
             <a href="{unsub}" style="color:#9aa0a6;">Unsubscribe</a>.
           </p>
@@ -195,6 +220,29 @@ def _paragraphs(text: str) -> str:
         f'{_esc_html(b)}</p>'
         for b in blocks
     )
+
+
+def _preview_from_content(content: str, limit: int = 420) -> str:
+    """Build a clean text preview from post content: strip image lines/tokens,
+    keep prose, and trim to a sentence near `limit` chars."""
+    if not content:
+        return ""
+    kept = []
+    for ln in content.split("\n"):
+        s = ln.strip()
+        if s.startswith("[img:"):
+            continue
+        if re.match(r"^https?://\S+\.(png|jpe?g|gif|webp|avif)(\?\S*)?$", s, re.I):
+            continue
+        kept.append(ln)
+    text = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "))
+    if end > limit * 0.5:
+        return cut[: end + 1]
+    return cut.rsplit(" ", 1)[0].rstrip() + "…"
 
 
 def render_email(subject, body, heading=None, cta_text=None, cta_url=None,

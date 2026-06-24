@@ -4,14 +4,6 @@ from typing import Optional, List
 from datetime import datetime
 
 # ============ User Schemas ============
-# ============ Contact / Inquiry Schemas ============
-class InquiryCreate(BaseModel):
-    name: str
-    email: EmailStr
-    project_type: Optional[str] = None
-    budget: Optional[str] = None
-    message: str
-
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
@@ -172,3 +164,12 @@ class BroadcastRequest(BaseModel):
 class SendPostRequest(BaseModel):
     slug: str
     emails: Optional[List[str]] = None
+    include_cover: bool = True
+
+# ============ Contact / Inquiry Schemas ============
+class InquiryCreate(BaseModel):
+    name: str
+    email: EmailStr
+    project_type: Optional[str] = None
+    budget: Optional[str] = None
+    message: str

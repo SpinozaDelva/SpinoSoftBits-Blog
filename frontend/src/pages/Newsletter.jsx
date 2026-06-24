@@ -20,6 +20,7 @@ function Newsletter() {
 
   // Send-a-post state
   const [postSlug, setPostSlug] = useState('');
+  const [includeCover, setIncludeCover] = useState(true);
 
   // Compose state
   const [subject, setSubject] = useState('');
@@ -94,7 +95,7 @@ function Newsletter() {
     if (!confirmSend()) return;
     setSending(true);
     try {
-      const res = await sendPost({ slug: postSlug, emails: recipients() });
+      const res = await sendPost({ slug: postSlug, emails: recipients(), include_cover: includeCover });
       setResult(`Sent to ${res.sent} ${res.sent === 1 ? 'person' : 'people'}.`);
     } catch (err) {
       setError('Send failed.');
@@ -238,8 +239,17 @@ function Newsletter() {
                   ))}
                 </select>
                 <p className="font-mono text-xs text-muted">
-                  Sends the standard “new post” email with a link to read it.
+                  Sends the standard “new post” email with a preview and a link to read it.
                 </p>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeCover}
+                    onChange={(e) => setIncludeCover(e.target.checked)}
+                    className="accent-glow h-4 w-4"
+                  />
+                  <span className="font-mono text-xs text-muted">Include the cover image at the top of the email</span>
+                </label>
                 <button
                   onClick={doSendPost}
                   disabled={sending || recipientCount === 0}
