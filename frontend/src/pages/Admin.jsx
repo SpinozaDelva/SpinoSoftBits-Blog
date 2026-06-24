@@ -208,7 +208,7 @@ function Admin() {
             placeholder="https://…/image.jpg"
           />
           <p className="font-mono text-xs text-muted mt-2">
-            Shown on the post and in social / email previews. Paste a hosted image URL.
+            Canvas cover — used on cards and as the default social/email preview. Not placed in the post body.
           </p>
           {coverImage && (
             <img
