@@ -5,6 +5,7 @@ import { getPosts } from '../api/posts';
 import useCategories from '../hooks/useCategories';
 import SubscribeForm from '../components/SubscribeForm';
 import WorkCTA from '../components/WorkCTA';
+import LatestFeature from '../components/LatestFeature';
 import PostCard from '../components/PostCard';
 
 const SERIF = '"Fraunces", Georgia, serif';
@@ -68,10 +69,18 @@ function Home() {
   const hero =
     HERO_KNOWN[active] || { eyebrow: `// ${cat.label.toLowerCase()}`, heading: `${cat.label}.`, sub: '' };
 
-  const visible = useMemo(
-    () => (active === 'all' ? posts : posts.filter((p) => (p.category || 'tech') === active)),
-    [posts, active]
+const latest3 = useMemo(
+    () => [...posts].sort((a, b) =>
+      new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at)
+    ).slice(0, 3),
+    [posts]
   );
+  const latestIds = useMemo(() => new Set(latest3.map((p) => p.id)), [latest3]);
+
+  const visible = useMemo(() => {
+    const base = active === 'all' ? posts : posts.filter((p) => (p.category || 'tech') === active);
+    return base.filter((p) => !latestIds.has(p.id));
+  }, [posts, active, latestIds]);
 
   const animate = visible.length > 3;
   const duration = Math.max(20, visible.length * 5);

@@ -12,8 +12,6 @@ const hexToRgba = (hex, a) => {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 };
 
-// Resolve a post's palette. Pass a catMap ({slug: {label, accent, serif}}) when
-// available (Home); otherwise fall back to fields the API already sends.
 export function paletteFor(post, catMap) {
   const slug = post.category || 'tech';
   if (catMap && catMap[slug]) return catMap[slug];
@@ -24,12 +22,12 @@ export function paletteFor(post, catMap) {
   };
 }
 
-function PostCard({ post, catMap }) {
+function PostCard({ post, catMap, large = false }) {
   const pc = paletteFor(post, catMap);
   return (
     <Link to={`/post/${post.slug}`} className="block">
       <article
-        className="feed-card relative overflow-hidden rounded-2xl p-6 cursor-pointer"
+        className={`feed-card relative overflow-hidden rounded-2xl cursor-pointer ${large ? 'p-9 md:p-12' : 'p-6'}`}
         style={{
           '--accent': pc.accent,
           background: `linear-gradient(135deg, #ffffff 0%, ${hexToRgba(pc.accent, 0.42)} 100%)`,
@@ -48,12 +46,14 @@ function PostCard({ post, catMap }) {
           )}
         </div>
         <h3
-          className="font-display text-2xl font-semibold leading-snug mb-2"
+          className={`font-display font-semibold leading-snug mb-2 ${large ? 'text-3xl md:text-5xl' : 'text-2xl'}`}
           style={pc.serif ? { color: '#1a1a1a', fontFamily: SERIF } : { color: '#1a1a1a' }}
         >
           {post.title}
         </h3>
-        <p className="leading-relaxed mb-4" style={{ color: 'rgba(0,0,0,0.7)' }}>{post.excerpt}</p>
+        <p className={`leading-relaxed mb-4 ${large ? 'text-lg md:text-xl max-w-2xl' : ''}`} style={{ color: 'rgba(0,0,0,0.7)' }}>
+          {post.excerpt}
+        </p>
         <div className="font-mono text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
           {post.author?.full_name || post.author?.username || 'Spinoza Delva'}
         </div>
