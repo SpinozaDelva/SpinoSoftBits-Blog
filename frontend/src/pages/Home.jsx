@@ -79,8 +79,12 @@ function Home() {
   const latestIds = useMemo(() => new Set(latest3.map((p) => p.id)), [latest3]);
 
   const visible = useMemo(() => {
-    const base = active === 'all' ? posts : posts.filter((p) => (p.category || 'tech') === active);
-    return base.filter((p) => !latestIds.has(p.id));
+    if (active !== 'all') {
+      // On a category tab: show every post in that category, nothing hidden.
+      return posts.filter((p) => (p.category || 'tech') === active);
+    }
+    // On All: the 3 latest are featured up top, so keep them out of the feed.
+    return posts.filter((p) => !latestIds.has(p.id));
   }, [posts, active, latestIds]);
 
   const animate = visible.length > 3;
@@ -157,8 +161,8 @@ function Home() {
           </span>
         </div>
 
-        {/* Featured: steady, full-width, slides through the 3 newest every 5s */}
-        <LatestFeature posts={latest3} catMap={catMap} />
+        {/* Featured: only on All — steady, full-width, slides through the 3 newest every 5s */}
+        {active === 'all' && <LatestFeature posts={latest3} catMap={catMap} />}
 
         {loading && <p className="font-mono text-sm text-muted">Loading…</p>}
         {error && <p className="font-mono text-sm text-glow">{error}</p>}
