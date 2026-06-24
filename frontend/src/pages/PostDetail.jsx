@@ -6,6 +6,7 @@ import {
   startCheckout, confirmUnlock, verifyUnlock, getStoredToken, storeToken,
 } from '../api/unlocks';
 import useCategories from '../hooks/useCategories';
+import PostBody from '../components/PostBody';
 
 const REDIRECT_SECONDS = 4;
 const SERIF = '"Fraunces", Georgia, "Times New Roman", serif';
@@ -421,12 +422,11 @@ function PostDetail() {
       ) : (
         /* Live post: themed content + share */
         <>
-          <div
-            className={`${theme.bodyClass} ${theme.align} text-fg/90 whitespace-pre-wrap`}
+          <PostBody
+            content={post.content}
+            className={`${theme.bodyClass} ${theme.align} text-fg/90`}
             style={theme.bodyStyle}
-          >
-            {post.content}
-          </div>
+          />
           <ShareBar
             url={typeof window !== 'undefined'
               ? window.location.href

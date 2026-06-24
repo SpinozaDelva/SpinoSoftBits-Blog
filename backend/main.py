@@ -12,6 +12,8 @@ from routes import auth, posts, newsletter, categories
 from routes import auth, posts, newsletter, categories, unlocks
 from routes import auth, posts, newsletter, categories, unlocks, dashboard  
 from routes import auth, posts, newsletter, categories, unlocks, dashboard, search
+from routes import auth, posts, newsletter, categories, unlocks, dashboard, search, uploads
+
 
 # Create database tables on startup
 @asynccontextmanager
@@ -51,6 +53,9 @@ app.include_router(categories.router, prefix="/api/categories", tags=["Categorie
 app.include_router(unlocks.router, prefix="/api/unlocks", tags=["Unlocks"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
+app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
+
+
 # Health check (root)
 @app.get("/")
 async def root():

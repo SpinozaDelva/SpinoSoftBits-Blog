@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createPost, updatePost, publishPost, getAllPostsAdmin } from '../api/posts';
 import useCategories from '../hooks/useCategories';
+import { uploadImage } from '../api/uploads';
 
 // Smallest selectable drop time = now, in the local format datetime-local wants.
 const nowLocalInput = () => {
@@ -19,6 +20,8 @@ const isoToLocalInput = (iso) => {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
 };
+
+
 
 function Admin() {
   const navigate = useNavigate();
@@ -40,6 +43,25 @@ function Admin() {
   const [loadingPost, setLoadingPost] = useState(isEdit);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';            // allow re-selecting the same file
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await uploadImage(file);
+      // drop the URL on its own line at the end of the content
+      setContent((c) => (c.trim() ? `${c}\n\n${url}\n` : `${url}\n`));
+    } catch (err) {
+      console.error(err);
+      setError('Image upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Load the post when editing.
   useEffect(() => {
@@ -195,6 +217,13 @@ function Admin() {
             />
           )}
         </div>
+        <div className="mb-2">
+            <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-1.5 font-mono text-xs text-muted hover:text-glow hover:border-glow/40 transition-colors">
+              {uploading ? 'Uploading…' : '+ Insert image'}
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
+            </label>
+            <span className="ml-3 font-mono text-[11px] text-muted">Adds the image at the end — move the line where you want it.</span>
+          </div>
 
         <div>
           <label className="block font-mono text-xs text-muted mb-2">content</label>
