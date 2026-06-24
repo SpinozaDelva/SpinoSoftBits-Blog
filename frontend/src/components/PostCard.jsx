@@ -24,6 +24,8 @@ export function paletteFor(post, catMap) {
 
 function PostCard({ post, catMap, large = false }) {
   const pc = paletteFor(post, catMap);
+  const fade =
+    'radial-gradient(120% 90% at 70% 50%, #000 0%, rgba(0,0,0,0.5) 45%, transparent 78%)';
   return (
     <Link to={`/post/${post.slug}`} className="block">
       <article
@@ -33,6 +35,21 @@ function PostCard({ post, catMap, large = false }) {
           background: `linear-gradient(135deg, #ffffff 0%, ${hexToRgba(pc.accent, 0.42)} 100%)`,
         }}
       >
+        {post.cover_image && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: `url(${post.cover_image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.22,
+              WebkitMaskImage: fade,
+              maskImage: fade,
+            }}
+          />
+        )}
+        <div className="relative z-10">
         <div className="flex items-center gap-3 font-mono text-xs mb-3" style={{ color: 'rgba(0,0,0,0.5)' }}>
           <span className="uppercase tracking-widest font-semibold" style={{ color: pc.accent }}>{pc.label}</span>
           <span style={{ color: 'rgba(0,0,0,0.22)' }}>/</span>
@@ -56,6 +73,7 @@ function PostCard({ post, catMap, large = false }) {
         </p>
         <div className="font-mono text-xs" style={{ color: 'rgba(0,0,0,0.5)' }}>
           {post.author?.full_name || post.author?.username || 'Spinoza Delva'}
+        </div>
         </div>
       </article>
     </Link>
