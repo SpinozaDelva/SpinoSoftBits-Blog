@@ -36,6 +36,7 @@ class PostCreate(BaseModel):
     content: str
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
+    share_cover: bool = True
     is_featured: bool = False
     # Writing type: 'tech' | 'poem' | 'essay'.
     category: Optional[str] = 'tech'
@@ -52,6 +53,7 @@ class PostUpdate(BaseModel):
     content: Optional[str] = None
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
+    share_cover: Optional[bool] = None
     is_featured: Optional[bool] = None
     is_published: Optional[bool] = None
     category: Optional[str] = None
@@ -68,6 +70,7 @@ class PostResponse(BaseModel):
     # content is None when the post is locked (scheduled for a future drop).
     content: Optional[str] = None
     cover_image: Optional[str] = None
+    share_cover: bool = True
     read_time: int
     is_published: bool
     is_featured: bool

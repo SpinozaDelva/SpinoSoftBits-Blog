@@ -36,6 +36,7 @@ function Admin() {
   const [tags, setTags] = useState('');
   const [isFeatured, setIsFeatured] = useState(false);
   const [coverImage, setCoverImage] = useState('');
+  const [shareCover, setShareCover] = useState(true);
   const [category, setCategory] = useState('tech');
   const [isPremium, setIsPremium] = useState(false);
   const [priceDollars, setPriceDollars] = useState(''); // string for the input
@@ -83,6 +84,7 @@ function Admin() {
         setTags((post.tags || []).map((t) => t.name).join(', '));
         setIsFeatured(Boolean(post.is_featured));
         setCoverImage(post.cover_image || '');
+        setShareCover(post.share_cover !== false);
         setCategory(post.category || 'tech');
         setIsPremium(Boolean(post.is_premium));
         setPriceDollars(post.price_cents ? (post.price_cents / 100).toFixed(2) : '');
@@ -120,6 +122,7 @@ function Admin() {
     is_premium: isPremium,
     price_cents: isPremium ? Math.round((parseFloat(priceDollars) || 0) * 100) : 0,
     cover_image: coverImage.trim() || null,
+    share_cover: shareCover,
     // datetime-local is local & naive; convert to UTC ISO. Empty = no drop.
     drop_date: dropDate ? new Date(dropDate).toISOString() : null,
     tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -210,6 +213,15 @@ function Admin() {
           <p className="font-mono text-xs text-muted mt-2">
             Canvas cover — used on cards and as the default social/email preview. Not placed in the post body.
           </p>
+          <label className="flex items-center gap-2 mt-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={shareCover}
+              onChange={(e) => setShareCover(e.target.checked)}
+              className="accent-glow h-4 w-4"
+            />
+            <span className="font-mono text-xs text-muted">Use cover image for social / link previews</span>
+          </label>
           {coverImage && (
             <img
               src={coverImage}

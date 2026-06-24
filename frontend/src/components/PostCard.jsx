@@ -38,19 +38,51 @@ function PostCard({ post, catMap, large = false }) {
         }}
       >
         {post.cover_image && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage: `url(${post.cover_image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              opacity: 0.2,
-              WebkitMaskImage: fade,
-              maskImage: fade,
-            }}
-          />
+          large ? (
+            <>
+              {/* Featured: photo reads clearly on the right */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  backgroundImage: `url(${post.cover_image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center right',
+                  backgroundRepeat: 'no-repeat',
+                  opacity: 0.85,
+                }}
+              />
+              {/* Left-to-right light scrim keeps the title/text legible */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.82) 28%, rgba(255,255,255,0.45) 52%, rgba(255,255,255,0.12) 78%, rgba(255,255,255,0) 100%)',
+                }}
+              />
+              {/* Faint accent tint just to tie it to the category */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{ background: `linear-gradient(135deg, transparent 40%, ${hexToRgba(pc.accent, 0.18)} 100%)` }}
+              />
+            </>
+          ) : (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage: `url(${post.cover_image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                opacity: 0.2,
+                WebkitMaskImage: fade,
+                maskImage: fade,
+              }}
+            />
+          )
         )}
         <div className="relative z-10">
         <div className="flex items-center gap-3 font-mono text-xs mb-3" style={{ color: 'rgba(0,0,0,0.5)' }}>

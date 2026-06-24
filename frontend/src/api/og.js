@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       meta = {
         title: p.title || meta.title,
         description: (p.excerpt || meta.description).slice(0, 200),
-        image: p.cover_image || DEFAULT_IMAGE,
+       image: (p.share_cover !== false && p.cover_image) ? p.cover_image : DEFAULT_IMAGE,
         url: `${base}/post/${slug}`,
       };
     }
