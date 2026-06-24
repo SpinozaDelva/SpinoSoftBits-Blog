@@ -1,4 +1,4 @@
-// src/pages/Home.jsx - Blog home: live category tabs, featured slider, horizontal auto-scroll feed
+// src/pages/Home.jsx - Blog home: live category tabs, featured slider, vertical auto-scroll feed
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getPosts } from '../api/posts';
@@ -83,22 +83,22 @@ function Home() {
     return base.filter((p) => !latestIds.has(p.id));
   }, [posts, active, latestIds]);
 
-  const animate = visible.length > 2;
-  const duration = Math.max(20, visible.length * 6);
+  const animate = visible.length > 3;
+  const duration = Math.max(20, visible.length * 5);
 
   return (
     <div className="min-h-screen overflow-x-hidden">
       <style>{`
-        @keyframes feedScrollX { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .feed-track-x { animation: feedScrollX var(--feed-dur, 40s) linear infinite; will-change: transform; width: max-content; }
-        .feed-viewport:hover .feed-track-x { animation-play-state: paused; }
-        .feed-mask-x {
-          -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-          mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+        @keyframes feedScroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+        .feed-track { animation: feedScroll var(--feed-dur, 40s) linear infinite; will-change: transform; }
+        .feed-viewport:hover .feed-track { animation-play-state: paused; }
+        .feed-mask {
+          -webkit-mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 85%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 85%, transparent);
         }
         .feed-card { transition: transform .3s ease, box-shadow .3s ease; box-shadow: 0 4px 14px -8px rgba(0,0,0,0.4); }
         .feed-card:hover { transform: translateY(-5px) scale(1.012); box-shadow: 0 26px 52px -18px var(--accent); }
-        @media (prefers-reduced-motion: reduce) { .feed-track-x { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .feed-track { animation: none; } }
       `}</style>
 
       {/* Hero — re-themes per category */}
@@ -166,30 +166,22 @@ function Home() {
           <p className="font-mono text-sm text-muted">Nothing here yet in this category.</p>
         )}
 
-        {/* Horizontal auto-scroll feed */}
+        {/* Vertical auto-scroll feed */}
         {animate ? (
-          <div className="feed-viewport feed-mask-x relative overflow-hidden">
-            <div className="feed-track-x flex gap-4" style={{ '--feed-dur': `${duration}s` }}>
-              {[...visible, ...visible].map((post, i) => (
-                <div key={`${post.id}-${i}`} className="w-[340px] md:w-[440px] shrink-0">
-                  <PostCard post={post} catMap={catMap} />
-                </div>
-              ))}
+          <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
+            <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
+              {[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
             </div>
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-3">
-            {visible.map((post) => (
-              <div key={post.id} className="w-[340px] md:w-[440px] shrink-0">
-                <PostCard post={post} catMap={catMap} />
-              </div>
-            ))}
+          <div className="space-y-4">
+            {visible.map((post) => <PostCard key={post.id} post={post} catMap={catMap} />)}
           </div>
         )}
 
         {animate && (
           <p className="mt-4 text-center font-mono text-[11px] text-muted tracking-widest uppercase">
-            ← scrolling · hover to pause
+            ↑ scrolling · hover to pause
           </p>
         )}
 
