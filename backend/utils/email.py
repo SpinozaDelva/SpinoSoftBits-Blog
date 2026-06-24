@@ -25,33 +25,39 @@ def _sender() -> str:
 
 
 def _shell(inner: str) -> str:
-    """Wrap content in a branded, polished email layout (inline CSS for clients)."""
+    """Wrap content in a branded, polished email layout (inline CSS for clients).
+    On-brand: dark ink header + gold accent + monospace eyebrow, matching the blog."""
+    mono = "Consolas,Menlo,Monaco,'Courier New',monospace"
     return f"""
-    <div style="background:#f4f5f7;padding:28px 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
-      <div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.06);">
+    <div style="background:#eceef3;padding:28px 14px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+      <div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 8px 28px rgba(13,17,23,0.12);">
 
-        <!-- Header (solid color first = Outlook fallback; gradient for modern clients) -->
-        <div style="background-color:#667eea;background-image:linear-gradient(135deg,#667eea 0%,#764ba2 55%,#e8b339 130%);padding:32px 28px;text-align:center;">
-          <h1 style="margin:0;color:#ffffff;font-size:24px;letter-spacing:-0.3px;font-weight:800;">
-            SpinoSoft<span style="color:#ffd86b;">Bits</span>
+        <!-- Header (dark + gold; solid bg = Outlook-safe) -->
+        <div style="background-color:#0d1117;padding:38px 28px 30px;text-align:center;">
+          <div style="font-family:{mono};font-size:11px;letter-spacing:3px;color:#f5b53d;text-transform:uppercase;margin:0 0 14px;">&#47;&#47; the blog</div>
+          <h1 style="margin:0;color:#f4f6fb;font-size:27px;letter-spacing:-0.4px;font-weight:800;">
+            SpinoSoft<span style="color:#f5b53d;">Bits</span>
           </h1>
-          <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">{TAGLINE}</p>
+          <p style="margin:12px 0 0;color:#8b93a7;font-size:12px;letter-spacing:0.4px;font-family:{mono};">{TAGLINE}</p>
         </div>
 
+        <!-- Gold accent rule -->
+        <div style="height:3px;background-color:#f5b53d;background-image:linear-gradient(90deg,#f5b53d 0%,#e8893b 100%);font-size:0;line-height:0;">&nbsp;</div>
+
         <!-- Body -->
-        <div style="padding:32px 28px;color:#2b2f36;">
+        <div style="padding:36px 30px;color:#2b2f36;">
           {inner}
         </div>
 
-        <!-- Footer -->
-        <div style="border-top:1px solid #eee;padding:22px 28px;text-align:center;background:#fafafa;">
+        <!-- Footer (dark, bookends the header) -->
+        <div style="padding:24px 28px;text-align:center;background:#0d1117;">
           <p style="margin:0 0 10px;">
-            <a href="{GITHUB}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">GitHub</a>
-            <a href="{LINKEDIN}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">LinkedIn</a>
-            <a href="{MAIN_SITE}" style="color:#667eea;text-decoration:none;font-size:13px;margin:0 8px;">Hire me</a>
+            <a href="{GITHUB}" style="color:#cfd4df;text-decoration:none;font-size:13px;margin:0 9px;font-family:{mono};">GitHub</a>
+            <a href="{LINKEDIN}" style="color:#cfd4df;text-decoration:none;font-size:13px;margin:0 9px;font-family:{mono};">LinkedIn</a>
+            <a href="{MAIN_SITE}" style="color:#f5b53d;text-decoration:none;font-size:13px;margin:0 9px;font-family:{mono};">Hire me</a>
           </p>
-          <p style="margin:0;color:#9aa0a6;font-size:12px;">
-            Powered by <a href="{MAIN_SITE}" style="color:#9aa0a6;">SpinoSoftBits.com</a> · Brooklyn, NY
+          <p style="margin:0;color:#6b7280;font-size:12px;">
+            Powered by <a href="{MAIN_SITE}" style="color:#8b93a7;text-decoration:none;">SpinoSoftBits.com</a> &middot; Brooklyn, NY
           </p>
         </div>
 
@@ -68,7 +74,7 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
     greeting = f"Hey {name}," if name else "Hey there,"
     unsub = f"{API_URL}/newsletter/unsubscribe?email={to_email}"
     inner = f"""
-      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Welcome aboard</p>
+      <p style="font-size:12px;color:#c98a1e;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Welcome aboard</p>
       <h2 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1a1f29;">You're in. 🎉</h2>
 
       <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">
@@ -88,13 +94,13 @@ def send_welcome_email(to_email: str, name: Optional[str] = None) -> None:
         Building something yourself and want a hand? Just hit reply — these come straight to me.
       </p>
 
-      <p style="font-size:15px;line-height:1.6;color:#3a4150;background:#f4f5ff;border-radius:10px;padding:14px 16px;margin:0 0 22px;">
+      <p style="font-size:15px;line-height:1.6;color:#3a4150;background:#fdf6e9;border-left:3px solid #f5b53d;border-radius:8px;padding:14px 16px;margin:0 0 22px;">
         💡 <strong>One small favor:</strong> add <strong>{FROM_EMAIL}</strong> to your contacts so my
         emails land in your main inbox instead of getting lost in a Promotions tab.
       </p>
 
       <p style="margin:0 0 6px;">
-        <a href="{SITE_URL}" style="background:#667eea;color:#fff;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Start reading →</a>
+        <a href="{SITE_URL}" style="background:#f5b53d;color:#0d1117;text-decoration:none;padding:12px 24px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Start reading →</a>
       </p>
 
       <p style="font-size:13px;color:#9aa0a6;margin-top:24px;">
@@ -151,12 +157,12 @@ def send_new_post_email(to_emails: List[str], title: str, excerpt: str, slug: st
         unsub = f"{API_URL}/newsletter/unsubscribe?email={email}"
         inner = f"""
           {cover_html}
-          <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Fresh from the blog</p>
+          <p style="font-size:12px;color:#c98a1e;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">Fresh from the blog</p>
           <h2 style="margin:0 0 16px;font-size:25px;line-height:1.25;color:#1a1f29;">{title}</h2>
           {lead_html}
           {preview_html}
           <p style="margin:24px 0 6px;">
-            <a href="{url}" style="background:#667eea;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Read the full post →</a>
+            <a href="{url}" style="background:#f5b53d;color:#0d1117;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Read the full post →</a>
           </p>
           <p style="font-size:13px;color:#9aa0a6;margin-top:24px;">
             You're getting this because you subscribed at SpinoSoftBits.
@@ -181,14 +187,14 @@ def send_unlock_email(to_email: str, title: str, slug: str, token: str) -> None:
         return
     link = f"{SITE_URL}/post/{slug}?key={token}"
     inner = f"""
-      <p style="font-size:13px;color:#764ba2;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Unlocked ✓</p>
+      <p style="font-size:13px;color:#c98a1e;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Unlocked ✓</p>
       <h2 style="margin:0 0 12px;font-size:22px;">{title}</h2>
       <p style="font-size:16px;line-height:1.6;color:#444;">
         Thanks for your purchase! Your access is saved on this device — and this
         link will unlock the full post on any device, anytime. Keep this email.
       </p>
       <p style="margin-top:22px;">
-        <a href="{link}" style="background:#667eea;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;">Read the full post</a>
+        <a href="{link}" style="background:#f5b53d;color:#0d1117;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;">Read the full post</a>
       </p>
       <p style="font-size:12px;color:#888;margin-top:24px;word-break:break-all;">
         Or paste this link: {link}
@@ -250,7 +256,7 @@ def render_email(subject, body, heading=None, cta_text=None, cta_url=None,
     """Build a branded HTML email body from simple inputs. If body_html is given
     (admin-authored rich text), it's used directly; otherwise plain `body` is
     escaped and split into paragraphs."""
-    accent = "#667eea"
+    accent = "#f5b53d"
     heading_html = ""
     if heading:
         if template == "announcement":
@@ -303,7 +309,7 @@ def send_confirm_email(to_email: str, name: Optional[str], token: str) -> None:
     greeting = f"Hey {name}," if name else "Hey there,"
     confirm_url = f"{API_URL}/newsletter/confirm?token={token}"
     inner = f"""
-      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">One quick step</p>
+      <p style="font-size:12px;color:#c98a1e;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">One quick step</p>
       <h2 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#1a1f29;">Confirm your subscription</h2>
       <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 16px;">{greeting}</p>
       <p style="font-size:16px;line-height:1.7;color:#3a4150;margin:0 0 22px;">
@@ -311,7 +317,7 @@ def send_confirm_email(to_email: str, name: Optional[str], token: str) -> None:
         confirm it's really your inbox.
       </p>
       <p style="margin:0 0 18px;">
-        <a href="{confirm_url}" style="background:#667eea;color:#fff;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Confirm my email →</a>
+        <a href="{confirm_url}" style="background:#f5b53d;color:#0d1117;text-decoration:none;padding:13px 26px;border-radius:9px;font-size:15px;font-weight:600;display:inline-block;">Confirm my email →</a>
       </p>
       <p style="font-size:13px;color:#9aa0a6;margin-top:18px;">
         Didn't sign up? You can ignore this — nothing happens unless you confirm.
@@ -339,7 +345,7 @@ def send_inquiry_email(name, email, message, project_type=None, budget=None) -> 
     if budget:
         extra += f'<p style="font-size:15px;margin:0 0 6px;"><strong>Budget:</strong> {_esc_html(budget)}</p>'
     inner = f"""
-      <p style="font-size:12px;color:#764ba2;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">New inquiry</p>
+      <p style="font-size:12px;color:#c98a1e;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 10px;font-weight:600;">New inquiry</p>
       <h2 style="margin:0 0 14px;font-size:22px;color:#1a1f29;">{_esc_html(name)} wants to work with you</h2>
       <p style="font-size:15px;margin:0 0 6px;"><strong>Email:</strong> {_esc_html(email)}</p>
       {extra}
