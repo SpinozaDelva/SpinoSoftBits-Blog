@@ -31,11 +31,12 @@ def _card(post, color: str | None) -> dict:
 @router.get("/posts")
 async def search_posts(
     q: str = Query("", description="Search text (title, excerpt, body)"),
+    category: str = Query("", description="Filter by category slug ('' or 'all' = every category)"),
     page: int = Query(1, ge=1),
     page_size: int = Query(9, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    """Search published posts by title/excerpt/content, paginated."""
+    """Search published posts by title/excerpt/content, optional category, paginated."""
     filters = [Post.is_published == True]
     term = (q or "").strip()
     if term:
@@ -45,6 +46,9 @@ async def search_posts(
             Post.excerpt.ilike(like),
             Post.content.ilike(like),
         ))
+    cat = (category or "").strip()
+    if cat and cat != "all":
+        filters.append(Post.category == cat)
 
     total = (await db.execute(
         select(func.count()).select_from(Post).where(*filters)
