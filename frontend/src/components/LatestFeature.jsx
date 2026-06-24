@@ -21,11 +21,26 @@ function LatestFeature({ posts = [], catMap }) {
 
   return (
     <div className="my-10" style={{ marginLeft: 'calc(50% - 50vw)', marginRight: 'calc(50% - 50vw)', width: '100vw' }}>
+      <style>{`
+        @keyframes latestDrop {
+          0%   { opacity: 0; transform: translateY(-34px) scale(0.985); filter: blur(2px); }
+          60%  { opacity: 1; filter: blur(0); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        .latest-drop { animation: latestDrop .7s cubic-bezier(.22, 1, .36, 1) both; }
+        @media (prefers-reduced-motion: reduce) { .latest-drop { animation: none; } }
+      `}</style>
+
       <div className="max-w-6xl mx-auto px-6">
         <p className="font-mono text-xs tracking-widest uppercase mb-3" style={{ color: 'var(--color-glow)' }}>
           {'// latest writing'}
         </p>
-        <PostCard post={post} catMap={catMap} large />
+
+        {/* key={idx} remounts on each swap so the drop animation replays */}
+        <div key={idx} className="latest-drop">
+          <PostCard post={post} catMap={catMap} large />
+        </div>
+
         {top.length > 1 && (
           <div className="flex justify-center gap-2 mt-4">
             {top.map((p, i) => (
