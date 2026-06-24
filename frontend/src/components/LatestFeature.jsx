@@ -1,4 +1,4 @@
-// src/components/LatestFeature.jsx - steady full-width feature; auto-slides through top 3 every 5s
+// src/components/LatestFeature.jsx - steady full-width feature; auto-slides through top 5 every 5s
 import { useState, useEffect, useRef } from 'react';
 import PostCard from './PostCard';
 
@@ -12,19 +12,21 @@ function LatestFeature({ posts = [], catMap }) {
   const [anim, setAnim] = useState(false); // briefly true to trigger the slide
   const pausedRef = useRef(false);
 
-  const go = (next) => {
-    setDir(next > idx || (idx === top.length - 1 && next === 0) ? 1 : -1);
+  const go = (next, direction) => {
+    const len = top.length;
+    const target = ((next % len) + len) % len;
+    setDir(direction);
     setAnim(true);
-    // let the incoming card start off-screen, then settle in
     requestAnimationFrame(() => requestAnimationFrame(() => setAnim(false)));
-    setIdx(next);
+    setIdx(target);
   };
 
-  const advance = () => go((idx + 1) % top.length);
+  const goNext = () => go(idx + 1, 1);
+  const goPrev = () => go(idx - 1, -1);
 
   useEffect(() => {
     if (top.length <= 1) return undefined;
-    const t = setInterval(() => { if (!pausedRef.current) advance(); }, ROTATE_MS);
+    const t = setInterval(() => { if (!pausedRef.current) goNext(); }, ROTATE_MS);
     return () => clearInterval(t);
   }, [idx, top.length]);
 
@@ -32,6 +34,12 @@ function LatestFeature({ posts = [], catMap }) {
 
   if (top.length === 0) return null;
   const post = top[idx] || top[0];
+  const many = top.length > 1;
+
+  const arrowBtn =
+    'pointer-events-auto absolute top-1/2 -translate-y-1/2 z-20 grid place-items-center ' +
+    'h-12 w-12 rounded-full border border-border bg-ink/70 backdrop-blur text-fg ' +
+    'opacity-0 group-hover:opacity-100 transition-all duration-300 hover:border-glow/60 hover:text-glow';
 
   return (
     <div
@@ -45,26 +53,40 @@ function LatestFeature({ posts = [], catMap }) {
           {'// latest writing'}
         </p>
 
-        {/* Viewport clips the sliding card */}
-        <div className="overflow-hidden">
-          <div
-            key={post.id}
-            style={{
-              transform: anim ? `translateX(${dir * 60}px)` : 'translateX(0)',
-              opacity: anim ? 0 : 1,
-              transition: anim ? 'none' : `transform ${SLIDE_MS}ms cubic-bezier(.22,1,.36,1), opacity ${SLIDE_MS}ms ease`,
-            }}
-          >
-            <PostCard post={post} catMap={catMap} large />
+        {/* group: hovering anywhere over this reveals the arrows */}
+        <div className="group relative">
+          {/* viewport clips the sliding card */}
+          <div className="overflow-hidden">
+            <div
+              key={post.id}
+              style={{
+                transform: anim ? `translateX(${dir * 60}px)` : 'translateX(0)',
+                opacity: anim ? 0 : 1,
+                transition: anim ? 'none' : `transform ${SLIDE_MS}ms cubic-bezier(.22,1,.36,1), opacity ${SLIDE_MS}ms ease`,
+              }}
+            >
+              <PostCard post={post} catMap={catMap} large />
+            </div>
           </div>
+
+          {many && (
+            <>
+              <button onClick={goPrev} aria-label="Previous" className={`${arrowBtn} left-3 -translate-x-1`}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <button onClick={goNext} aria-label="Next" className={`${arrowBtn} right-3 translate-x-1`}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            </>
+          )}
         </div>
 
-        {top.length > 1 && (
+        {many && (
           <div className="flex justify-center gap-2 mt-4">
             {top.map((p, i) => (
               <button
                 key={p.id}
-                onClick={() => go(i)}
+                onClick={() => go(i, i > idx ? 1 : -1)}
                 aria-label={`Show latest post ${i + 1}`}
                 className="h-2 rounded-full transition-all"
                 style={{

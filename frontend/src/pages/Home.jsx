@@ -171,27 +171,9 @@ function Home() {
 
         {/* Vertical auto-scroll feed */}
         {animate ? (
-          <div className="group relative h-[72vh] max-h-[760px]">
-            <div className="feed-viewport feed-mask absolute inset-0 overflow-hidden">
-              <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
-                {[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
-              </div>
-            </div>
-
-            {/* Side arrows — full-height, appear on hover, themed to the category accent */}
-            <div
-              className="pointer-events-none absolute inset-y-0 left-1 z-10 flex flex-col items-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              style={{ color: accent }}
-            >
-              <svg width="30" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 15l6-6 6 6" /></svg>
-              <div className="flex-1 w-[2px] rounded-full my-1" style={{ background: `linear-gradient(to bottom, ${accent}, transparent)` }} />
-            </div>
-            <div
-              className="pointer-events-none absolute inset-y-0 right-1 z-10 flex flex-col items-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              style={{ color: accent }}
-            >
-              <div className="flex-1 w-[2px] rounded-full my-1" style={{ background: `linear-gradient(to top, ${accent}, transparent)` }} />
-              <svg width="30" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
+            <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
+              {[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
             </div>
           </div>
         ) : (
