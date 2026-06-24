@@ -101,7 +101,15 @@ function Home() {
         }
         .feed-card { transition: transform .3s ease, box-shadow .3s ease; box-shadow: 0 4px 14px -8px rgba(0,0,0,0.4); }
         .feed-card:hover { transform: translateY(-5px) scale(1.012); box-shadow: 0 26px 52px -18px var(--accent); }
-        @media (prefers-reduced-motion: reduce) { .feed-track { animation: none; } }
+        @keyframes heroBreath {
+          0%, 100% { opacity: 0.18; transform: scale(1); }
+          50%      { opacity: 0.38; transform: scale(1.18); }
+        }
+        .hero-glow { animation: heroBreath 6s ease-in-out infinite; will-change: opacity, transform; }
+        @media (prefers-reduced-motion: reduce) {
+          .feed-track { animation: none; }
+          .hero-glow { animation: none; }
+        }
       `}</style>
 
       {/* Hero — re-themes per category */}
@@ -110,7 +118,7 @@ function Home() {
         style={{ background: `radial-gradient(120% 100% at 25% 0%, ${hexToRgba(accent, 0.10)}, transparent 60%)` }}
       >
         <div
-          className="absolute -top-40 left-1/4 h-96 w-96 rounded-full opacity-25 blur-[120px] transition-all duration-500"
+          className="hero-glow absolute -top-40 left-1/4 h-96 w-96 rounded-full blur-[120px] transition-colors duration-500"
           style={{ backgroundColor: accent }}
         />
         <div className="relative max-w-5xl mx-auto px-6 py-12">
