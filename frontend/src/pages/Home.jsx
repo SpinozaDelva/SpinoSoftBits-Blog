@@ -114,12 +114,12 @@ function Home() {
           className="absolute -top-40 left-1/4 h-96 w-96 rounded-full opacity-25 blur-[120px] transition-all duration-500"
           style={{ backgroundColor: accent }}
         />
-        <div className="relative max-w-5xl mx-auto px-6 py-24">
+        <div className={`relative max-w-5xl mx-auto px-6 ${active === 'all' ? 'py-12' : 'py-24'}`}>
           <p className="font-mono text-xs tracking-widest uppercase mb-6 transition-colors duration-500" style={{ color: accent }}>
             {hero.eyebrow}
           </p>
           <h1
-            className="font-display text-5xl md:text-6xl font-bold leading-[1.05] tracking-tight max-w-3xl"
+            className={`font-display font-bold leading-[1.05] tracking-tight max-w-3xl ${active === 'all' ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl'}`}
             style={cat.serif ? { fontFamily: SERIF, fontStyle: 'italic' } : undefined}
           >
             {hero.heading}
@@ -133,7 +133,7 @@ function Home() {
       </header>
 
       {/* Posts */}
-      <main className="max-w-5xl mx-auto px-6 py-16">
+      <main className={`max-w-5xl mx-auto px-6 ${active === 'all' ? 'pt-8 pb-16' : 'py-16'}`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10">
           <div className="flex items-center gap-4 flex-wrap">
             <h2 className="font-mono text-xs text-muted tracking-widest uppercase">Latest writing</h2>
