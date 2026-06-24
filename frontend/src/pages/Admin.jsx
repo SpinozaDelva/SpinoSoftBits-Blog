@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { createPost, updatePost, publishPost, getAllPostsAdmin } from '../api/posts';
 import useCategories from '../hooks/useCategories';
 import { uploadImage } from '../api/uploads';
+import ImageManager from '../components/ImageManager';
 
 // Smallest selectable drop time = now, in the local format datetime-local wants.
 const nowLocalInput = () => {
@@ -217,13 +218,11 @@ function Admin() {
             />
           )}
         </div>
-        <div className="mb-2">
-            <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-border px-3 py-1.5 font-mono text-xs text-muted hover:text-glow hover:border-glow/40 transition-colors">
-              {uploading ? 'Uploading…' : '+ Insert image'}
-              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
-            </label>
-            <span className="ml-3 font-mono text-[11px] text-muted">Adds the image at the end — move the line where you want it.</span>
-          </div>
+<ImageManager
+            coverUrl={coverImage}
+            onSetCover={setCoverImage}
+            onInsert={(token) => setContent((c) => (c.trim() ? `${c}\n\n${token}\n` : `${token}\n`))}
+          />
 
         <div>
           <label className="block font-mono text-xs text-muted mb-2">content</label>
