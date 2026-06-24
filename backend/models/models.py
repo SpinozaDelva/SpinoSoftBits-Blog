@@ -40,6 +40,7 @@ class Post(Base):
     is_published = Column(Boolean, default=False)
     is_featured = Column(Boolean, default=False)
     share_cover = Column(Boolean, nullable=False, default=True, server_default="true")
+    font_style = Column(String, nullable=False, default="default", server_default="default")
     # Pay-to-unlock: when True, public API returns only a teaser; full content
     # requires a valid unlock token. price_cents is the one-time price (e.g. 300 = $3).
     is_premium = Column(Boolean, default=False)

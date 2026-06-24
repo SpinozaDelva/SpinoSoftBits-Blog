@@ -13,7 +13,7 @@ function parseImg(line) {
   return null;
 }
 
-function PostBody({ content, className = '', style }) {
+function PostBody({ content, className = '', style, fontFamily }) {
   const lines = (content || '').split('\n');
   const blocks = [];
   let buf = [];
@@ -26,6 +26,9 @@ function PostBody({ content, className = '', style }) {
     else buf.push(line);
   }
   flushText();
+
+  // Chosen post font overrides any family coming in via `style`.
+  const textStyle = fontFamily ? { ...(style || {}), fontFamily } : style;
 
   return (
     <div>
@@ -47,7 +50,7 @@ function PostBody({ content, className = '', style }) {
           />
         ) : (
           b.value.trim() && (
-            <div key={i} className={`${className} whitespace-pre-wrap`} style={style}>
+            <div key={i} className={`${className} whitespace-pre-wrap`} style={textStyle}>
               {b.value}
             </div>
           )

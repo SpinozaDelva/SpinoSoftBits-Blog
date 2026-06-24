@@ -37,6 +37,7 @@ class PostCreate(BaseModel):
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
     share_cover: bool = True
+    font_style: str = "default"
     is_featured: bool = False
     # Writing type: 'tech' | 'poem' | 'essay'.
     category: Optional[str] = 'tech'
@@ -54,6 +55,7 @@ class PostUpdate(BaseModel):
     excerpt: Optional[str] = None
     cover_image: Optional[str] = None
     share_cover: Optional[bool] = None
+    font_style: Optional[str] = None
     is_featured: Optional[bool] = None
     is_published: Optional[bool] = None
     category: Optional[str] = None
@@ -71,6 +73,7 @@ class PostResponse(BaseModel):
     content: Optional[str] = None
     cover_image: Optional[str] = None
     share_cover: bool = True
+    font_style: str = "default"
     read_time: int
     is_published: bool
     is_featured: bool

@@ -7,6 +7,7 @@ import {
 } from '../api/unlocks';
 import useCategories from '../hooks/useCategories';
 import PostBody from '../components/PostBody';
+import { fontFamilyFor } from '../lib/fonts';
 
 const REDIRECT_SECONDS = 4;
 const SERIF = '"Fraunces", Georgia, "Times New Roman", serif';
@@ -415,10 +416,11 @@ function PostDetail() {
       ) : (
         /* Live post: themed content + share */
         <>
-          <PostBody
+            <PostBody
             content={post.content}
             className={`${theme.bodyClass} ${theme.align} text-fg/90`}
             style={theme.bodyStyle}
+            fontFamily={fontFamilyFor(post.font_style)}
           />
           <ShareBar
             url={typeof window !== 'undefined'

@@ -5,6 +5,7 @@ import { createPost, updatePost, publishPost, getAllPostsAdmin } from '../api/po
 import useCategories from '../hooks/useCategories';
 import { uploadImage } from '../api/uploads';
 import ImageManager from '../components/ImageManager';
+import { POST_FONTS } from '../lib/fonts';
 
 // Smallest selectable drop time = now, in the local format datetime-local wants.
 const nowLocalInput = () => {
@@ -38,6 +39,7 @@ function Admin() {
   const [coverImage, setCoverImage] = useState('');
   const [shareCover, setShareCover] = useState(true);
   const [category, setCategory] = useState('tech');
+  const [fontStyle, setFontStyle] = useState('default');
   const [isPremium, setIsPremium] = useState(false);
   const [priceDollars, setPriceDollars] = useState(''); // string for the input
   const [dropDate, setDropDate] = useState(''); // local datetime-local string, '' = live now
@@ -86,6 +88,7 @@ function Admin() {
         setCoverImage(post.cover_image || '');
         setShareCover(post.share_cover !== false);
         setCategory(post.category || 'tech');
+        setFontStyle(post.font_style || 'default');
         setIsPremium(Boolean(post.is_premium));
         setPriceDollars(post.price_cents ? (post.price_cents / 100).toFixed(2) : '');
         setDropDate(isoToLocalInput(post.drop_date));
@@ -119,6 +122,7 @@ function Admin() {
     content,
     is_featured: isFeatured,
     category,
+    font_style: fontStyle,
     is_premium: isPremium,
     price_cents: isPremium ? Math.round((parseFloat(priceDollars) || 0) * 100) : 0,
     cover_image: coverImage.trim() || null,
@@ -235,6 +239,23 @@ function Admin() {
             onSetCover={setCoverImage}
             onInsert={(token) => setContent((c) => (c.trim() ? `${c}\n\n${token}\n` : `${token}\n`))}
           />
+
+        <div>
+          <label className="block font-mono text-xs text-muted mb-2">font</label>
+          <select
+            value={fontStyle}
+            onChange={(e) => setFontStyle(e.target.value)}
+            className="w-full rounded-lg border border-border bg-ink-raised px-4 py-3 text-fg outline-none focus:border-glow/50"
+            style={{ fontFamily: POST_FONTS[fontStyle]?.family || undefined }}
+          >
+            {Object.entries(POST_FONTS).map(([key, f]) => (
+              <option key={key} value={key} style={{ fontFamily: f.family || undefined }}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <p className="font-mono text-xs text-muted mt-2">Sets the font for this post's body text.</p>
+        </div>
 
         <div>
           <label className="block font-mono text-xs text-muted mb-2">content</label>
