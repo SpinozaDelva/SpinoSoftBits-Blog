@@ -69,7 +69,8 @@ function Home() {
   const hero =
     HERO_KNOWN[active] || { eyebrow: `// ${cat.label.toLowerCase()}`, heading: `${cat.label}.`, sub: '' };
 
-const latest3 = useMemo(
+  // 3 most recent posts (overall) — featured up top, and removed from the feed below.
+  const latest3 = useMemo(
     () => [...posts].sort((a, b) =>
       new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at)
     ).slice(0, 3),
@@ -84,7 +85,6 @@ const latest3 = useMemo(
 
   const animate = visible.length > 3;
   const duration = Math.max(20, visible.length * 5);
-
 
   return (
     <div className="min-h-screen">
@@ -157,6 +157,9 @@ const latest3 = useMemo(
           </span>
         </div>
 
+        {/* Featured: steady, full-width, rotates the 3 newest every 5 min */}
+        <LatestFeature posts={latest3} catMap={catMap} />
+
         {loading && <p className="font-mono text-sm text-muted">Loading…</p>}
         {error && <p className="font-mono text-sm text-glow">{error}</p>}
         {!loading && !error && visible.length === 0 && (
@@ -166,12 +169,12 @@ const latest3 = useMemo(
         {animate ? (
           <div className="feed-viewport feed-mask relative h-[72vh] max-h-[760px] overflow-hidden">
             <div className="feed-track space-y-4" style={{ '--feed-dur': `${duration}s` }}>
-{[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
+              {[...visible, ...visible].map((post, i) => <PostCard key={`${post.id}-${i}`} post={post} catMap={catMap} />)}
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-{visible.map((post) => <PostCard key={post.id} post={post} catMap={catMap} />)}
+            {visible.map((post) => <PostCard key={post.id} post={post} catMap={catMap} />)}
           </div>
         )}
 
@@ -179,19 +182,21 @@ const latest3 = useMemo(
           <p className="mt-4 text-center font-mono text-[11px] text-muted tracking-widest uppercase">
             ↑ scrolling · hover to pause
           </p>
-        )}<div className="text-center mt-8">
-  <Link to="/archive" className="inline-block rounded-lg border border-border px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted hover:text-glow hover:border-glow/40 transition-colors">
-    View all posts
-  </Link>
-</div>
+        )}
 
-       <div className="mt-16">
-  <SubscribeForm />
-</div>
+        <div className="text-center mt-8">
+          <Link to="/archive" className="inline-block rounded-lg border border-border px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted hover:text-glow hover:border-glow/40 transition-colors">
+            View all posts
+          </Link>
+        </div>
 
-<div className="mt-10">
-  <WorkCTA />
-</div>
+        <div className="mt-16">
+          <SubscribeForm />
+        </div>
+
+        <div className="mt-10">
+          <WorkCTA />
+        </div>
       </main>
     </div>
   );
