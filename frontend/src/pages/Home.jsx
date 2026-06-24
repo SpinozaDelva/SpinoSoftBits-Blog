@@ -69,23 +69,22 @@ function Home() {
   const hero =
     HERO_KNOWN[active] || { eyebrow: `// ${cat.label.toLowerCase()}`, heading: `${cat.label}.`, sub: '' };
 
-  // 3 most recent posts (overall) — featured up top, and removed from the feed below.
-  const latest3 = useMemo(
-    () => [...posts].sort((a, b) =>
-      new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at)
-    ).slice(0, 3),
-    [posts]
+  // Posts in the active scope (all, or just one category).
+  const scopePosts = useMemo(
+    () => (active === 'all' ? posts : posts.filter((p) => (p.category || 'tech') === active)),
+    [posts, active]
   );
-  const latestIds = useMemo(() => new Set(latest3.map((p) => p.id)), [latest3]);
 
-  const visible = useMemo(() => {
-    if (active !== 'all') {
-      // On a category tab: show every post in that category, nothing hidden.
-      return posts.filter((p) => (p.category || 'tech') === active);
-    }
-    // On All: the 3 latest are featured up top, so keep them out of the feed.
-    return posts.filter((p) => !latestIds.has(p.id));
-  }, [posts, active, latestIds]);
+  // Latest in this scope for the carousel (up to 5) — still also shown in the feed.
+  const featured = useMemo(
+    () => [...scopePosts].sort((a, b) =>
+      new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at)
+    ).slice(0, 5),
+    [scopePosts]
+  );
+
+  // Vertical feed shows ALL posts in the scope, including the featured ones.
+  const visible = scopePosts;
 
   const animate = visible.length > 3;
   const duration = Math.max(20, visible.length * 5);
@@ -114,12 +113,12 @@ function Home() {
           className="absolute -top-40 left-1/4 h-96 w-96 rounded-full opacity-25 blur-[120px] transition-all duration-500"
           style={{ backgroundColor: accent }}
         />
-        <div className={`relative max-w-5xl mx-auto px-6 ${active === 'all' ? 'py-12' : 'py-24'}`}>
+        <div className="relative max-w-5xl mx-auto px-6 py-12">
           <p className="font-mono text-xs tracking-widest uppercase mb-6 transition-colors duration-500" style={{ color: accent }}>
             {hero.eyebrow}
           </p>
           <h1
-            className={`font-display font-bold leading-[1.05] tracking-tight max-w-3xl ${active === 'all' ? 'text-4xl md:text-5xl' : 'text-5xl md:text-6xl'}`}
+            className="font-display font-bold leading-[1.05] tracking-tight max-w-3xl text-4xl md:text-5xl"
             style={cat.serif ? { fontFamily: SERIF, fontStyle: 'italic' } : undefined}
           >
             {hero.heading}
@@ -133,7 +132,7 @@ function Home() {
       </header>
 
       {/* Posts */}
-      <main className={`max-w-5xl mx-auto px-6 ${active === 'all' ? 'pt-8 pb-16' : 'py-16'}`}>
+      <main className="max-w-5xl mx-auto px-6 pt-8 pb-16">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10">
           <div className="flex items-center gap-4 flex-wrap">
             <h2 className="font-mono text-xs text-muted tracking-widest uppercase">Latest writing</h2>
@@ -157,16 +156,16 @@ function Home() {
             </div>
           </div>
           <span className="font-mono text-xs text-muted">
-            {visible.length} {visible.length === 1 ? 'post' : 'posts'}
+            {scopePosts.length} {scopePosts.length === 1 ? 'post' : 'posts'}
           </span>
         </div>
 
-        {/* Featured: only on All — steady, full-width, slides through the 3 newest every 5s */}
-        {active === 'all' && <LatestFeature posts={latest3} catMap={catMap} />}
+        {/* Featured: latest in this scope (up to 5) — steady, full-width, slides every 5s */}
+        {featured.length > 0 && <LatestFeature posts={featured} catMap={catMap} />}
 
         {loading && <p className="font-mono text-sm text-muted">Loading…</p>}
         {error && <p className="font-mono text-sm text-glow">{error}</p>}
-        {!loading && !error && visible.length === 0 && (
+        {!loading && !error && scopePosts.length === 0 && (
           <p className="font-mono text-sm text-muted">Nothing here yet in this category.</p>
         )}
 

@@ -6,7 +6,7 @@ const ROTATE_MS = 5000;        // advance every 5 seconds
 const SLIDE_MS = 600;          // transition duration
 
 function LatestFeature({ posts = [], catMap }) {
-  const top = posts.slice(0, 3);
+  const top = posts.slice(0, 5);
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState(1);       // 1 = next (slide left), -1 = prev (slide right)
   const [anim, setAnim] = useState(false); // briefly true to trigger the slide
