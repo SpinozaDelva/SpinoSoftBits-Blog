@@ -20,7 +20,7 @@ function Newsletter() {
 
   // Send-a-post state
   const [postSlug, setPostSlug] = useState('');
-  const [includeCover, setIncludeCover] = useState(true);
+  const [includeCover, setIncludeCover] = useState(false);
 
   // Compose state
   const [subject, setSubject] = useState('');
@@ -248,7 +248,7 @@ function Newsletter() {
                     onChange={(e) => setIncludeCover(e.target.checked)}
                     className="accent-glow h-4 w-4"
                   />
-                  <span className="font-mono text-xs text-muted">Include the cover image at the top of the email</span>
+                  <span className="font-mono text-xs text-muted">Include the cover image at the top of the email (off by default)</span>
                 </label>
                 <button
                   onClick={doSendPost}
