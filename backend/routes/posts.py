@@ -278,6 +278,7 @@ async def create_post(
         read_time=calculate_read_time(post_data.content),
         is_featured=post_data.is_featured,
         category=post_data.category or "tech",
+        font_style=post_data.font_style or "default",
         is_premium=post_data.is_premium,
         price_cents=post_data.price_cents or 0,
         drop_date=post_data.drop_date,
@@ -347,6 +348,8 @@ async def update_post(
         post.is_featured = post_data.is_featured
     if post_data.category is not None:
         post.category = post_data.category
+    if post_data.font_style is not None:
+        post.font_style = post_data.font_style
     if post_data.is_premium is not None:
         post.is_premium = post_data.is_premium
     if post_data.price_cents is not None:
