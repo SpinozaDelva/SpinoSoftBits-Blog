@@ -5,12 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 
 from database import get_db
-from models import Post
+from models import Post, Category
 
 router = APIRouter()
 
 
-def _card(post) -> dict:
+def _card(post, color: str | None) -> dict:
     """Lightweight listing card. No body content (keeps payload small and never
     leaks premium content). Built locally so this module imports no other route."""
     return {
@@ -20,6 +20,7 @@ def _card(post) -> dict:
         "excerpt": post.excerpt,
         "cover_image": post.cover_image,
         "category": post.category or "tech",
+        "category_color": color or "#9aa0a6",
         "read_time": post.read_time,
         "is_premium": bool(post.is_premium),
         "created_at": post.created_at,
@@ -55,7 +56,15 @@ async def search_posts(
         .order_by(Post.created_at.desc())
         .offset(offset).limit(page_size)
     )
-    items = [_card(p) for p in result.scalars().all()]
+    posts = result.scalars().all()
+
+    # Map category slug -> color so we can tint each label like the home cards.
+    colors: dict[str, str] = {}
+    cat_rows = await db.execute(select(Category.slug, Category.color_primary))
+    for slug, color in cat_rows.all():
+        colors[slug] = color
+
+    items = [_card(p, colors.get(p.category or "tech")) for p in posts]
 
     pages = max(1, math.ceil(total / page_size)) if total else 1
     return {

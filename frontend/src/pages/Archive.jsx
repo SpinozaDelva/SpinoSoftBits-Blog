@@ -71,8 +71,9 @@ function Archive() {
                 >
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <h3 className="font-display font-semibold text-fg">{p.title}</h3>
-                    <span className="font-mono text-[11px] text-muted uppercase tracking-widest">
-                      {p.category}{p.is_premium ? ' \u00b7 premium' : ''} \u00b7 {fmtDate(p.created_at)}
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                      <span style={{ color: p.category_color }}>{p.category}</span>
+                      {p.is_premium ? ' \u00b7 premium' : ''} {'\u00b7'} {fmtDate(p.created_at)}
                     </span>
                   </div>
                   {p.excerpt && <p className="text-sm text-muted leading-relaxed mt-2 line-clamp-2">{p.excerpt}</p>}
@@ -86,7 +87,7 @@ function Archive() {
               <button
                 onClick={() => setPage((n) => Math.max(1, n - 1))}
                 disabled={page <= 1}
-                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30 disabled:hover:text-muted disabled:hover:border-border"
+                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
               >
                 Prev
               </button>
@@ -94,7 +95,7 @@ function Archive() {
               <button
                 onClick={() => setPage((n) => Math.min(pages, n + 1))}
                 disabled={page >= pages}
-                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30 disabled:hover:text-muted disabled:hover:border-border"
+                className="rounded-lg border border-border px-4 py-2 text-muted hover:text-glow hover:border-glow/40 transition-colors disabled:opacity-30"
               >
                 Next
               </button>
