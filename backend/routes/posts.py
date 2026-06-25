@@ -446,4 +446,4 @@ async def publish_post(
                 send_new_post_email, emails, post.title, post.excerpt or "", post.slug, post.cover_image
             )
 
-    return _serialize(post)
+    return _serialize(post)mnghb
