@@ -143,7 +143,7 @@ function Home() {
       <main className="max-w-5xl mx-auto px-6 pt-8 pb-16">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10">
           <div className="flex items-center gap-4 flex-wrap">
-            <h2 className="font-mono text-xs text-muted tracking-widest uppercase">Latest writing</h2>
+            <h2 className="font-mono text-xs text-muted tracking-widest uppercase"></h2>
             <div className="flex items-center gap-1.5 flex-wrap">
               {tabs.map((key) => {
                 const meta = key === 'all' ? { label: 'All', accent: ALL_ACCENT } : metaFor(key);
